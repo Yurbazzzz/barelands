@@ -1,9 +1,23 @@
 const path = require('path');
+const fs = require('fs');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 
 const isDev = process.env.NODE_ENV === 'development';
+
+const pagesDir = path.resolve(__dirname, 'src/pages');
+const pageFiles = fs.existsSync(pagesDir)
+  ? fs.readdirSync(pagesDir).filter((file) => file.endsWith('.html'))
+  : [];
+const pagePlugins = pageFiles.map((file) => new HtmlWebpackPlugin({
+  template: `./src/pages/${file}`,
+  filename: `pages/${file}`,
+  minify: {
+    removeComments: !isDev,
+    collapseWhitespace: !isDev,
+  },
+}));
 
 module.exports = {
   entry: './src/index.js',
@@ -84,11 +98,13 @@ module.exports = {
   plugins: [
     new HtmlWebpackPlugin({
       template: './src/index.html',
+      filename: 'index.html',
       minify: {
         removeComments: !isDev,
         collapseWhitespace: !isDev
       }
     }),
+    ...pagePlugins,
     new MiniCssExtractPlugin({
       filename: 'css/main.[contenthash:8].css',
     }),

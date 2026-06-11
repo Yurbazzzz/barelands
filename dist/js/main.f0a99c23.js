@@ -1,0 +1,1 @@
+(()=>{"use strict";console.log("Webpack проект загружен!"),document.addEventListener("DOMContentLoaded",function(){console.log("DOM полностью загружена")})})();

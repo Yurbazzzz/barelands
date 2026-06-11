@@ -1,0 +1,81 @@
+.servers {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    margin-bottom: 5%; 
+    
+    &__content {
+        width: 100%;
+        text-align: center;
+        color: #fff;
+        margin: 5% 0%;
+    }
+
+    &__title {
+        font-size: 32px;
+    }
+    &__subtitle {
+        font-size: 18px;
+    }
+
+    &__list {
+        width: 100%;
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: stretch;
+        justify-content: space-evenly;
+    }
+}
+
+.server-card {
+    background-image: url('../images/fon.png');
+    height: 315px;
+    background-size: cover;
+    background-position: center;
+    border-radius: 8px;
+    padding: 20px;
+    margin: 10px 0;
+    color: #fff;
+    width: 100%;
+    max-width: 600px;
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+
+    &__name {
+        font-size: 24px;
+        margin-bottom: 10px;
+    }
+
+    &__description {
+        font-size: 16px;
+        margin-bottom: 15px;
+    }
+
+    &__status {
+        font-size: 14px;
+        color: #aaa;
+        display: flex;
+    }
+}
+
+.status-green {
+    display: inline-block;
+    width: 15px;
+    height: 15px;
+    background-color: #4CAF50;
+    border-radius: 50%;
+    margin-left: 10px;
+}
+
+.status-red {
+    display: inline-block;
+    width: 15px;
+    height: 15px;
+    background-color: #f44336;
+    border-radius: 50%;
+    margin-left: 10px;
+}

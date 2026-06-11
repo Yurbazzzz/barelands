@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Barelands</title>
-    <link rel="icon" type="image/x-icon" href="./images/logo.png">
+    <link rel="icon" type="image/x-icon" href="../images/logo.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
@@ -13,16 +13,16 @@
     <div id="root">
         <header class="header">
             <div class="header__logo--container">
-                <img src="./images/logo.png" alt="Логотип Barelands" class="header__logo">
+                <img src="../images/logo.png" alt="Логотип Barelands" class="header__logo">
                 <p class="header__logo-title">BARELANDS</p>
             </div>
             
 
              <nav class="header__nav">
-                <a class="header__nav-link" href="./index.html">Начать играть</a>
-                <a class="header__nav-link" href="./pages/shop.html">Магазин</a>
-                <a class="header__nav-link" href="./pages/news.html">Новости</a>
-                <a class="header__nav-link" href="./pages/servers.html">Серверы</a>
+                <a class="header__nav-link" href="../index.html">Начать играть</a>
+                <a class="header__nav-link" href="./shop.html">Магазин</a>
+                <a class="header__nav-link" href="./news.html">Новости</a>
+                <a class="header__nav-link" href="./servers.html">Серверы</a>
             </nav>
 
             <button class="login-btn">
@@ -38,27 +38,34 @@
         </header>
         
         <main>
-            <section class="main">
-            <div class="main__content">
-               <h1 class="main__title">Добро пожаловать в <span>BARELANDS!</span> </h1>
-               <p class="main__subtitle">Наслаждайтесь игрой в нашем <span>уникальном</span> мире!</p>
-               <p class="main__paragraph">Присоединяйтесь к нам и исследуйте бескрайние просторы, сражайтесь с монстрами и стройте свои собственные приключения!</p>
-            </div>
-            <div class="main__image-container">
-                <div class="main__image-overlay">
-                    <p class="main__image-text">Начинай играть вместе с нами</p>
-                    <P class="main__image-subtext">Вам нужно только:</P>
-                    <div class="main__image-buttons">  
-                        <a href="https://store.steampowered.com/app/221100/DayZ/"  target="_blank" class="main__image-link"> 
-                            <img src="./images/steam.jpg" alt="Steam" class="main__image-img"> 
-                        </a>
+            <section class="news__section">
+                <h1 class="news__section--title">Новости проекта:</h1>
+                <p class="news__section--description">Здесь представлены новости в кратком формате для быстрого ознакомления. Подробные публикации, дополнительные материалы и вся актуальная информация доступны в наших социальных сетях.</p>
+                <p class="news__section--description">Мы ценим вашу поддержку и всегда рады делиться с вами новостями о нашем проекте. Спасибо, что вы с нами!</p>
 
-                        <a href="https://discord.gg/gYPBU5B4ka" target="_blank" class="main__image-link"> 
-                            <img src="./images/discord.jpg" alt="Discord" class="main__image-img">
-                        </a>
+                <div class="news-card">
+                   <img src="../images/fon.png" alt="Новость 3" class="news-card__image">
+                   <div class="news-card__content">
+                       <h2 class="news-card__title"><span> Обновление 1.2: </span>ещё больше баребухов</h2>
+                       <p class="news-card__description">Мы рады представить вам первое крупное обновление для Barelands! В версии 1.2 вас ждет ещё больше баребухов, которые сделают игру еще более захватывающей.</p>
                     </div>
                 </div>
-            </section>
+
+                <div class="news-card">
+                   <img src="../images/fon.png" alt="Новость 2" class="news-card__image">
+                   <div class="news-card__content">
+                       <h2 class="news-card__title"><span> Обновление 1.1: </span> Баребухи</h2>
+                       <p class="news-card__description">Мы добавили баребухи в игру!</p>
+                    </div>
+                </div>
+
+                <div class="news-card">
+                   <img src="../images/fon.png" alt="Новость 1" class="news-card__image">
+                   <div class="news-card__content">
+                       <h2 class="news-card__title"><span> Обновление 1.0: </span>Новый мир и механики!</h2>
+                       <p class="news-card__description">Мы рады представить вам первое крупное обновление для Barelands! В версии 1.0 вас ждет новый мир, наполненный загадками и приключениями, а также множество новых механик, которые сделают игру еще более захватывающей.</p>
+                    </div>
+                </div>
         </main>
         
         <footer class="footer">

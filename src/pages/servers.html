@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Barelands</title>
-    <link rel="icon" type="image/x-icon" href="./images/logo.png">
+    <link rel="icon" type="image/x-icon" href="../images/logo.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
@@ -13,16 +13,16 @@
     <div id="root">
         <header class="header">
             <div class="header__logo--container">
-                <img src="./images/logo.png" alt="Логотип Barelands" class="header__logo">
+                <img src="../images/logo.png" alt="Логотип Barelands" class="header__logo">
                 <p class="header__logo-title">BARELANDS</p>
             </div>
             
 
              <nav class="header__nav">
-                <a class="header__nav-link" href="./index.html">Начать играть</a>
-                <a class="header__nav-link" href="./pages/shop.html">Магазин</a>
-                <a class="header__nav-link" href="./pages/news.html">Новости</a>
-                <a class="header__nav-link" href="./pages/servers.html">Серверы</a>
+                <a class="header__nav-link" href="../index.html">Начать играть</a>
+                <a class="header__nav-link" href="./shop.html">Магазин</a>
+                <a class="header__nav-link" href="./news.html">Новости</a>
+                <a class="header__nav-link" href="./servers.html">Серверы</a>
             </nav>
 
             <button class="login-btn">
@@ -38,27 +38,41 @@
         </header>
         
         <main>
-            <section class="main">
-            <div class="main__content">
-               <h1 class="main__title">Добро пожаловать в <span>BARELANDS!</span> </h1>
-               <p class="main__subtitle">Наслаждайтесь игрой в нашем <span>уникальном</span> мире!</p>
-               <p class="main__paragraph">Присоединяйтесь к нам и исследуйте бескрайние просторы, сражайтесь с монстрами и стройте свои собственные приключения!</p>
-            </div>
-            <div class="main__image-container">
-                <div class="main__image-overlay">
-                    <p class="main__image-text">Начинай играть вместе с нами</p>
-                    <P class="main__image-subtext">Вам нужно только:</P>
-                    <div class="main__image-buttons">  
-                        <a href="https://store.steampowered.com/app/221100/DayZ/"  target="_blank" class="main__image-link"> 
-                            <img src="./images/steam.jpg" alt="Steam" class="main__image-img"> 
-                        </a>
-
-                        <a href="https://discord.gg/gYPBU5B4ka" target="_blank" class="main__image-link"> 
-                            <img src="./images/discord.jpg" alt="Discord" class="main__image-img">
-                        </a>
-                    </div>
+           
+            <section class="servers">
+                <div class="servers__content">
+                    <h1 class="servers__title">Серверы Barelands</h1>
+                    <p class="servers__subtitle">Здесь находится информация о серверах и их статусе.</p>
                 </div>
+
+                <div class="servers__list">
+                    <div class="server-card">
+                        <h2 class="server-card__name">Сервер 1</h2>
+                        <p class="server-card__status">Статус: <span class="status-green"></span></p>
+                        <p class="server-card__players">Игроков онлайн: 120/500</p>
+                    </div>
+
+                    <div class="server-card">
+                        <h2 class="server-card__name">Сервер 2</h2>
+                        <p class="server-card__status">Статус: <span class="status-red"></span></p>
+                        <p class="server-card__players">Игроков онлайн: 0/500</p>
+                    </div>
+
+                    <div class="server-card">
+                        <h2 class="server-card__name">Сервер 3</h2>
+                        <p class="server-card__status">Статус: <span class="status-green"></span></p>
+                        <p class="server-card__players">Игроков онлайн: 250/500</p>
+                    </div>
+
+                    <div class="server-card">
+                        <h2 class="server-card__name">Сервер 4</h2>
+                        <p class="server-card__status">Статус: <span class="status-red"></span></p>
+                        <p class="server-card__players">Игроков онлайн: 0/500</p>
+                    </div>
+                    <!-- Добавьте больше карточек серверов по мере необходимости -->
+
             </section>
+
         </main>
         
         <footer class="footer">
