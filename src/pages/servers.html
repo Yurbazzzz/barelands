@@ -19,26 +19,26 @@
             
 
              <nav class="header__nav">
+                <button class="header__nav-close" aria-label="Закрыть меню">×</button>
                 <a class="header__nav-link" href="../index.html">Начать играть</a>
                 <a class="header__nav-link" href="./shop.html">Магазин</a>
                 <a class="header__nav-link" href="./news.html">Новости</a>
                 <a class="header__nav-link" href="./servers.html">Серверы</a>
+                <button class="login-btn" type="button">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="login-btn__icon" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 12c2.761 0 5-2.239 5-5s-2.239-5-5-5-5 2.239-5 5 2.239 5 5 5z"/>
+                        <path d="M4 20c0-4.418 3.582-8 8-8s8 3.582 8 8H4z"/>
+                    </svg>
+                    Войти
+                </button>
             </nav>
 
-            <button class="login-btn">
-                <svg viewBox="0 0 24 24" class="login-btn__icon" xmlns="http://www.w3.org/2000/svg" id="Multiple-Neutral-2--Streamline-Ultimate" height="24" width="24">
-                    <path d="M3.25 7.75a4.25 4.25 0 1 0 8.5 0 4.25 4.25 0 1 0 -8.5 0" fill="white" stroke="#000000" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"></path>
-                    <path d="M0.5 20.5a7 7 0 0 1 14 0Z" fill="white" stroke="#000000" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"></path>
-                    <path d="M16.5 20.5h7a5.5 5.5 0 0 0 -8.027 -4.885" fill="white" stroke="#000000" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"></path>
-                    <path d="M14.694 10.25a3.25 3.25 0 1 0 6.5 0 3.25 3.25 0 1 0 -6.5 0" fill="white" stroke="#000000" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"></path>
-                </svg>
-                Войти
-            
+            <button class="header__burger" aria-label="Открыть меню" aria-expanded="false">
+                <span class="burger__box"><span class="burger__inner"></span></span>
             </button>
         </header>
-        
+
         <main>
-           
             <section class="servers">
                 <div class="servers__content">
                     <h1 class="servers__title">Серверы Barelands</h1>
@@ -46,31 +46,48 @@
                 </div>
 
                 <div class="servers__list">
-                    <div class="server-card">
+                    <button class="server-card">
                         <h2 class="server-card__name">Сервер 1</h2>
                         <p class="server-card__status">Статус: <span class="status-green"></span></p>
                         <p class="server-card__players">Игроков онлайн: 120/500</p>
-                    </div>
+                    </button>
 
-                    <div class="server-card">
+                    <button class="server-card">
                         <h2 class="server-card__name">Сервер 2</h2>
                         <p class="server-card__status">Статус: <span class="status-red"></span></p>
                         <p class="server-card__players">Игроков онлайн: 0/500</p>
-                    </div>
+                    </button>
 
-                    <div class="server-card">
+                    <button class="server-card">
                         <h2 class="server-card__name">Сервер 3</h2>
                         <p class="server-card__status">Статус: <span class="status-green"></span></p>
-                        <p class="server-card__players">Игроков онлайн: 250/500</p>
-                    </div>
+                        <p class="server-card__players">Игроков онлайн: 350/500</p>
+                    </button>
 
-                    <div class="server-card">
+                    <button class="server-card">
                         <h2 class="server-card__name">Сервер 4</h2>
-                        <p class="server-card__status">Статус: <span class="status-red"></span></p>
-                        <p class="server-card__players">Игроков онлайн: 0/500</p>
-                    </div>
-                    <!-- Добавьте больше карточек серверов по мере необходимости -->
+                        <p class="server-card__status">Статус: <span class="status-green"></span></p>
+                        <p class="server-card__players">Игроков онлайн: 200/500</p>
+                    </button>
+                </div>
 
+                <div class="server-modal" id="server-modal" hidden>
+                    <div class="server-modal__backdrop" id="server-modal-backdrop"></div>
+                    <div class="server-modal__card">
+                        <h2 class="server-modal__title">Информация по серверу:</h2>
+                        <div class="server-modal__body">
+                            <div class="server-modal__image"></div>
+                            <div class="server-modal__info">
+                                <p class="server-modal__name" id="modal-server-name"></p>
+                                <p class="server-modal__status" id="modal-server-status"></p>
+                                <p class="server-modal__players" id="modal-server-players"></p>
+                            </div>
+                        </div>
+                        <div class="server-modal__controls">
+                            <button class="server-modal__close" type="button" id="close-server-modal">Закрыть</button>
+                        </div>
+                    </div>
+                </div>
             </section>
 
         </main>

@@ -19,42 +19,43 @@
             
 
              <nav class="header__nav">
+                <button class="header__nav-close" aria-label="Закрыть меню">×</button>
                 <a class="header__nav-link" href="./index.html">Начать играть</a>
                 <a class="header__nav-link" href="./pages/shop.html">Магазин</a>
                 <a class="header__nav-link" href="./pages/news.html">Новости</a>
                 <a class="header__nav-link" href="./pages/servers.html">Серверы</a>
+                <button class="login-btn" type="button">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="login-btn__icon" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 12c2.761 0 5-2.239 5-5s-2.239-5-5-5-5 2.239-5 5 2.239 5 5 5z"/>
+                        <path d="M4 20c0-4.418 3.582-8 8-8s8 3.582 8 8H4z"/>
+                    </svg>
+                    Войти
+                </button>
             </nav>
 
-            <button class="login-btn">
-                <svg viewBox="0 0 24 24" class="login-btn__icon" xmlns="http://www.w3.org/2000/svg" id="Multiple-Neutral-2--Streamline-Ultimate" height="24" width="24">
-                    <path d="M3.25 7.75a4.25 4.25 0 1 0 8.5 0 4.25 4.25 0 1 0 -8.5 0" fill="white" stroke="#000000" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"></path>
-                    <path d="M0.5 20.5a7 7 0 0 1 14 0Z" fill="white" stroke="#000000" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"></path>
-                    <path d="M16.5 20.5h7a5.5 5.5 0 0 0 -8.027 -4.885" fill="white" stroke="#000000" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"></path>
-                    <path d="M14.694 10.25a3.25 3.25 0 1 0 6.5 0 3.25 3.25 0 1 0 -6.5 0" fill="white" stroke="#000000" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"></path>
-                </svg>
-                Войти
-            
+            <button class="header__burger" aria-label="Открыть меню" aria-expanded="false">
+                <span class="burger__box"><span class="burger__inner"></span></span>
             </button>
         </header>
         
         <main>
-            <section class="main">
-            <div class="main__content">
-               <h1 class="main__title">Добро пожаловать в <span>BARELANDS!</span> </h1>
-               <p class="main__subtitle">Наслаждайтесь игрой в нашем <span>уникальном</span> мире!</p>
-               <p class="main__paragraph">Присоединяйтесь к нам и исследуйте бескрайние просторы, сражайтесь с монстрами и стройте свои собственные приключения!</p>
+            <section class="start">
+            <div class="start__content">
+               <h1 class="start__title">Добро пожаловать в <span>BARELANDS!</span> </h1>
+               <p class="start__subtitle">Наслаждайтесь игрой в нашем <span>уникальном</span> мире!</p>
+               <p class="start__paragraph">Присоединяйтесь к нам и исследуйте бескрайние просторы, сражайтесь с монстрами и стройте свои собственные приключения!</p>
             </div>
-            <div class="main__image-container">
-                <div class="main__image-overlay">
-                    <p class="main__image-text">Начинай играть вместе с нами</p>
-                    <P class="main__image-subtext">Вам нужно только:</P>
-                    <div class="main__image-buttons">  
-                        <a href="https://store.steampowered.com/app/221100/DayZ/"  target="_blank" class="main__image-link"> 
-                            <img src="./images/steam.jpg" alt="Steam" class="main__image-img"> 
+            <div class="start__image-container">
+                <div class="start__image-overlay">
+                    <p class="start__image-text">Начинай играть вместе с нами</p>
+                    <P class="start__image-subtext">Вам нужно только:</P>
+                    <div class="start__image-buttons">  
+                        <a href="https://store.steampowered.com/app/221100/DayZ/"  target="_blank" class="start__image-link"> 
+                            <img src="./images/steam.jpg" alt="Steam" class="start__image-img"> 
                         </a>
 
-                        <a href="https://discord.gg/gYPBU5B4ka" target="_blank" class="main__image-link"> 
-                            <img src="./images/discord.jpg" alt="Discord" class="main__image-img">
+                        <a href="https://discord.gg/gYPBU5B4ka" target="_blank" class="start__image-link"> 
+                            <img src="./images/discord.jpg" alt="Discord" class="start__image-img">
                         </a>
                     </div>
                 </div>

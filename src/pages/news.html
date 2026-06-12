@@ -19,24 +19,25 @@
             
 
              <nav class="header__nav">
+                <button class="header__nav-close" aria-label="Закрыть меню">×</button>
                 <a class="header__nav-link" href="../index.html">Начать играть</a>
                 <a class="header__nav-link" href="./shop.html">Магазин</a>
                 <a class="header__nav-link" href="./news.html">Новости</a>
                 <a class="header__nav-link" href="./servers.html">Серверы</a>
+                <button class="login-btn" type="button">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="login-btn__icon" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 12c2.761 0 5-2.239 5-5s-2.239-5-5-5-5 2.239-5 5 2.239 5 5 5z"/>
+                        <path d="M4 20c0-4.418 3.582-8 8-8s8 3.582 8 8H4z"/>
+                    </svg>
+                    Войти
+                </button>
             </nav>
 
-            <button class="login-btn">
-                <svg viewBox="0 0 24 24" class="login-btn__icon" xmlns="http://www.w3.org/2000/svg" id="Multiple-Neutral-2--Streamline-Ultimate" height="24" width="24">
-                    <path d="M3.25 7.75a4.25 4.25 0 1 0 8.5 0 4.25 4.25 0 1 0 -8.5 0" fill="white" stroke="#000000" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"></path>
-                    <path d="M0.5 20.5a7 7 0 0 1 14 0Z" fill="white" stroke="#000000" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"></path>
-                    <path d="M16.5 20.5h7a5.5 5.5 0 0 0 -8.027 -4.885" fill="white" stroke="#000000" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"></path>
-                    <path d="M14.694 10.25a3.25 3.25 0 1 0 6.5 0 3.25 3.25 0 1 0 -6.5 0" fill="white" stroke="#000000" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"></path>
-                </svg>
-                Войти
-            
+            <button class="header__burger" aria-label="Открыть меню" aria-expanded="false">
+                <span class="burger__box"><span class="burger__inner"></span></span>
             </button>
         </header>
-        
+
         <main>
             <section class="news__section">
                 <h1 class="news__section--title">Новости проекта:</h1>
@@ -66,6 +67,7 @@
                        <p class="news-card__description">Мы рады представить вам первое крупное обновление для Barelands! В версии 1.0 вас ждет новый мир, наполненный загадками и приключениями, а также множество новых механик, которые сделают игру еще более захватывающей.</p>
                     </div>
                 </div>
+            </section>
         </main>
         
         <footer class="footer">

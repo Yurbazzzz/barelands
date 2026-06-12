@@ -4,18 +4,20 @@
     border-style: solid;
     border-color:#ff6347;
     border-width: 1px;
-    padding: 11px;
-     box-shadow: 0 0 10px rgba(0,0,0,0.5);
+    padding: 11px 24px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.5);
 
-    display: flex; 
+    display: flex;
     align-items: center;
-    justify-content: space-around;
-    
+    justify-content: space-between;
+    width: min(1200px, 100%);
+    margin: 0 auto;
+    gap: 24px;
 
     &__logo--container {
-        width: 10%;
         display: flex;
         align-items: center;
+        gap: 12px;
     }
 
     &__logo {
@@ -24,20 +26,24 @@
         &-title {
             color: #fff;
             font-weight: bold;
+            white-space: nowrap;
+            font-size: 20px;
         }
     }
 
     &__nav {
-        width: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
+        gap: 24px;
+        flex-wrap: wrap;
 
         &-link {
             color: #a0a0a0;
             font-size: 18px;
             transition: color 0.3s;
-            margin: 0 5%;
+            padding: 10px 8px;
+            white-space: nowrap;
 
             &:hover {
                 color: #ff6347;
@@ -46,12 +52,128 @@
     }
 }
 
+/* Burger menu for small screens */
+.header__burger {
+    display: none;
+    background: transparent;
+    border: none;
+    width: 48px;
+    height: 40px;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.burger__box {
+    display: inline-block;
+    position: relative;
+    width: 24px;
+    height: 16px;
+}
+.burger__inner,
+.burger__inner::before,
+.burger__inner::after {
+    width: 24px;
+    height: 2px;
+    background-color: #fff;
+    display: block;
+    border-radius: 2px;
+    position: absolute;
+    transition: transform 0.25s ease, opacity 0.2s ease;
+}
+.burger__inner { top: 50%; transform: translateY(-50%); }
+.burger__inner::before { content: ''; top: -8px; }
+.burger__inner::after { content: ''; top: 8px; }
+
+.header__nav-close {
+    display: none;
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 38px;
+    height: 38px;
+    border: none;
+    background: transparent;
+    color: #fff;
+    font-size: 32px;
+    line-height: 0.9;
+    cursor: pointer;
+}
+
+.login-btn--mobile {
+    display: none;
+    width: 100%;
+    justify-content: center;
+    padding: 14px 16px;
+    margin-top: 12px;
+    border-radius: 14px;
+    border-color: #fff;
+    color: #fff;
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.18);
+    text-align: center;
+}
+
+@media (max-width: 900px) {
+    .header {
+        padding: 12px 18px;
+        justify-content: space-between;
+    }
+    .header__logo--container { width: auto; }
+    .header__nav {
+        position: fixed;
+        top: 0;
+        right: 0;
+        height: 100vh;
+        width: min(320px, 100%);
+        background: rgba(15,15,15,0.98);
+        flex-direction: column;
+        gap: 18px;
+        align-items: flex-start;
+        justify-content: flex-start;
+        padding: 84px 18px 20px 18px;
+        transform: translateX(100%);
+        box-shadow: -10px 0 30px rgba(0,0,0,0.6);
+        z-index: 1001;
+    }
+    .header__nav-close { display: block; }
+    .header__nav-link {
+        margin: 0;
+        width: 100%;
+        text-align: left;
+        padding: 14px 0;
+        font-size: 18px;
+    }
+    .header__burger { display: flex; }
+    .header__nav .login-btn {
+        order: -1;
+        width: 100%;
+        margin: 0 0 16px;
+        align-self: stretch;
+    }
+    /* overlay when nav open */
+    .header--nav-open .header__nav { transform: translateX(0); }
+    .header--nav-open::after {
+        content: '';
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.45);
+        z-index: 1000;
+    }
+}
+
+@media (min-width: 901px) {
+    .header__nav { position: static; transform: none; height: auto; width: auto; background: transparent; padding: 0; box-shadow: none; }
+}
+
 .login-btn {
-    width: 7%;
+    width: auto;
+    min-width: 130px;
     text-align: center;
     display: flex;
     align-items: center;
-    justify-content: space-evenly;
+    justify-content: center;
+    gap: 10px;
     background-color: #27272a;
     border-radius: 40px;
     border-width: 1px;
@@ -59,10 +181,11 @@
     border-color: grey;
     color: white;
 
-    padding: 5px 8px;
+    padding: 10px 14px;
 
     &__icon {
-        width: 23px;
+        width: 20px;
+        height: 20px;
     }
 
 }
