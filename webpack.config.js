@@ -24,6 +24,7 @@ module.exports = {
   output: {
     path: path.resolve(__dirname, 'dist'),
     filename: 'js/main.[contenthash:8].js',
+    publicPath: '/',
     clean: true,
     assetModuleFilename: 'assets/[name].[contenthash:8][ext]'
   },
@@ -35,6 +36,7 @@ module.exports = {
   devServer: {
     static: {
       directory: path.resolve(__dirname, 'dist'),
+      publicPath: '/',
     },
     port: 3000,
     open: true,
