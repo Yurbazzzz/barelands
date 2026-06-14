@@ -2,6 +2,7 @@ import { getDefaultAvatarUrl, loadSteamProfile } from './steam-profile.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
   const storageKey = 'barelandsUser';
+  const savedProfilesKey = 'barelandsSavedProfiles';
   const maxAvatarFileSize = 2 * 1024 * 1024;
   const nameNode = document.querySelector('.cabinet__name');
   const steamIdNode = document.querySelector('.cabinet__steam-id');
@@ -30,7 +31,25 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   const saveCurrentUser = (user) => {
     localStorage.setItem(storageKey, JSON.stringify(user));
+    saveSavedProfile(user);
   };
+
+  function getSavedProfiles() {
+    const raw = localStorage.getItem(savedProfilesKey);
+    if (!raw) return {};
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return {};
+    }
+  }
+
+  function saveSavedProfile(user) {
+    if (!user?.steamId) return;
+    const savedProfiles = getSavedProfiles();
+    savedProfiles[user.steamId] = user;
+    localStorage.setItem(savedProfilesKey, JSON.stringify(savedProfiles));
+  }
 
   const normalizeDisplayName = (user) => {
     if (!user) return 'Игрок';
