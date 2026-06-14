@@ -14,6 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const homeUrl = currentPath.includes('/pages/') ? '../index.html' : './index.html';
 
   const storageKey = 'barelandsUser';
+  const savedProfilesKey = 'barelandsSavedProfiles';
   const usersKey = 'barelandsUsers';
   let authModalInitialized = false;
   const isSteamCallbackPage = currentPath.endsWith('/steam-auth.html') || currentPath.endsWith('\\steam-auth.html');
@@ -53,6 +54,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function saveCurrentUser(user) {
     localStorage.setItem(storageKey, JSON.stringify(user));
+  }
+
+  function getSavedProfiles() {
+    const raw = localStorage.getItem(savedProfilesKey);
+    if (!raw) return {};
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return {};
+    }
+  }
+
+  function getSavedProfile(steamId) {
+    const savedProfiles = getSavedProfiles();
+    if (!savedProfiles || typeof savedProfiles !== 'object') return {};
+    return savedProfiles[steamId] || {};
+  }
+
+  function saveSavedProfile(user) {
+    if (!user?.steamId) return;
+    const savedProfiles = getSavedProfiles();
+    savedProfiles[user.steamId] = user;
+    localStorage.setItem(savedProfilesKey, JSON.stringify(savedProfiles));
   }
 
   function removeCurrentUser() {
@@ -221,11 +245,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const steamId = steamIdMatch[1];
+    const savedProfile = getSavedProfile(steamId);
     const basicUser = {
+      ...savedProfile,
       steamId,
-      email: `steam_${steamId}@barelands.local`,
-      displayName: `steam_${steamId}`,
-      avatarUrl: `https://steamcommunity.com/profiles/${steamId}/avatar/`
+      email: savedProfile.email || `steam_${steamId}@barelands.local`,
+      displayName: savedProfile.displayName || `steam_${steamId}`,
+      avatarUrl: savedProfile.avatarUrl || `https://steamcommunity.com/profiles/${steamId}/avatar/`
     };
 
     try {
@@ -256,7 +282,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const currentUser = getCurrentUser();
       const nameNode = document.querySelector('.cabinet__name');
       const steamIdNode = document.querySelector('.cabinet__steam-id');
-      const avatarNode = document.querySelector('.cabinet__avatar');
+      const avatarNode = document.querySelector('.cabinet__avatar-button');
       const displayName = getProfileDisplayName(currentUser);
 
       if (nameNode) {
@@ -272,6 +298,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (cabinetLogoutBtn) {
       cabinetLogoutBtn.addEventListener('click', () => {
+        saveSavedProfile(getCurrentUser());
         removeCurrentUser();
         redirectToHome();
       });

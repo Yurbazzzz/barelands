@@ -14,7 +14,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   const nicknameEditorInput = document.querySelector('.cabinet__nickname-editor-input');
   const saveNicknameButton = document.querySelector('.cabinet__save-button');
   const cancelNicknameButton = document.querySelector('.cabinet__cancel-button');
-  const resetButton = document.querySelector('.cabinet__reset-button');
   const editMessage = document.querySelector('.cabinet__edit-message');
   let currentUser;
   let nicknameDraft = '';
@@ -191,30 +190,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   };
 
-  const resetSteamProfile = async () => {
-    if (!currentUser.steamId) return;
-
-    const resetUser = { ...currentUser };
-    delete resetUser.customDisplayName;
-    delete resetUser.customAvatarUrl;
-    delete resetUser.displayName;
-    delete resetUser.nickname;
-    delete resetUser.avatarUrl;
-
-    try {
-      const updatedUser = await loadSteamProfile(resetUser.steamId, resetUser);
-      currentUser = updatedUser;
-      saveCurrentUser(updatedUser);
-      updateProfileView(updatedUser);
-      applyAvatar(updatedUser.avatarUrl || getDefaultAvatarUrl(updatedUser.steamId));
-      hideNicknameEditor(true);
-      showEditMessage('Данные профиля обновлены из Steam.');
-    } catch (error) {
-      console.error('Не удалось обновить профиль Steam:', error);
-      showEditMessage('Не удалось загрузить данные Steam. Попробуйте позже.', true);
-    }
-  };
-
   if (avatarButton) avatarButton.addEventListener('click', () => avatarFileInput?.click());
   if (avatarFileInput) avatarFileInput.addEventListener('change', (event) => {
     saveAvatarFile(event.target.files?.[0]);
@@ -229,7 +204,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (event.key === 'Escape') cancelNickname();
     });
   }
-  if (resetButton) resetButton.addEventListener('click', resetSteamProfile);
 
   updateProfileView(currentUser);
   applyAvatar(currentUser.avatarUrl || getDefaultAvatarUrl(currentUser.steamId));
