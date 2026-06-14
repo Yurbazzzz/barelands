@@ -66,6 +66,24 @@
                         <p class="cabinet__stat-value">0</p>
                     </article>
                 </div>
+                <section class="cabinet__profile-edit" aria-label="Редактирование профиля">
+                    <h2 class="cabinet__edit-title">Редактирование профиля</h2>
+                    <div class="cabinet__edit-grid">
+                        <label class="cabinet__edit-field">
+                            <span>Никнейм</span>
+                            <input class="cabinet__nickname-input" type="text" maxlength="32" autocomplete="nickname" placeholder="Введите никнейм">
+                        </label>
+                        <label class="cabinet__edit-field">
+                            <span>Ссылка на аватар</span>
+                            <input class="cabinet__avatar-input" type="url" autocomplete="url" placeholder="https://example.com/avatar.jpg">
+                        </label>
+                    </div>
+                    <div class="cabinet__edit-actions">
+                        <button class="cabinet__save-button" type="button">Сохранить профиль</button>
+                        <button class="cabinet__reset-button" type="button">Вернуть данные Steam</button>
+                    </div>
+                    <p class="cabinet__edit-message" aria-live="polite"></p>
+                </section>
                 <button class="cabinet__logout-button" type="button">Выйти из кабинета</button>
             </div>
         </div>
