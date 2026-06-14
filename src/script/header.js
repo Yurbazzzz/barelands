@@ -1,3 +1,5 @@
+import { loadSteamProfile } from './steam-profile.js';
+
 document.addEventListener('DOMContentLoaded', () => {
   const burger = document.querySelector('.header__burger');
   const header = document.querySelector('.header');
@@ -14,9 +16,26 @@ document.addEventListener('DOMContentLoaded', () => {
   const storageKey = 'barelandsUser';
   const usersKey = 'barelandsUsers';
   let authModalInitialized = false;
-  const steamCallbackPage = '/pages/steam-auth.html';
-  const steamRealm = `${window.location.origin}/`;
   const isSteamCallbackPage = currentPath.endsWith('/steam-auth.html') || currentPath.endsWith('\\steam-auth.html');
+
+  function getBaseUrlPath() {
+    if (currentPath === '/' || currentPath === '') return '/';
+    if (currentPath.endsWith('/')) return currentPath;
+    return currentPath.replace(/\/[^/]*$/, '/');
+  }
+
+  function getSteamCallbackPath() {
+    const baseUrlPath = getBaseUrlPath();
+    return baseUrlPath.endsWith('/pages/') ? `${baseUrlPath}steam-auth.html` : `${baseUrlPath}pages/steam-auth.html`;
+  }
+
+  function getSteamCallbackUrl() {
+    return `${window.location.origin}${getSteamCallbackPath()}`;
+  }
+
+  function getSteamRealm() {
+    return `${window.location.origin}${getBaseUrlPath()}`;
+  }
 
   function isLoggedIn() {
     return Boolean(localStorage.getItem(storageKey));
@@ -119,16 +138,27 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function performSteamAuth() {
+    if (!['http:', 'https:'].includes(window.location.protocol)) {
+      showAuthMessage('Steam-авторизация работает только на http://localhost или https-сайте.');
+      return;
+    }
+
+    const isHttpLocalhost = window.location.protocol === 'http:' && ['localhost', '127.0.0.1', '::1'].includes(window.location.hostname);
+    if (window.location.protocol === 'http:' && !isHttpLocalhost) {
+      showAuthMessage('Steam требует HTTPS для домена. Откройте сайт по HTTPS и попробуйте снова.');
+      return;
+    }
+
     const params = new URLSearchParams({
       'openid.ns': 'http://specs.openid.net/auth/2.0',
       'openid.mode': 'checkid_setup',
-      'openid.return_to': `${window.location.origin}${steamCallbackPage}`,
-      'openid.realm': steamRealm,
+      'openid.return_to': getSteamCallbackUrl(),
+      'openid.realm': getSteamRealm(),
       'openid.identity': 'http://specs.openid.net/auth/2.0/identifier_select',
       'openid.claimed_id': 'http://specs.openid.net/auth/2.0/identifier_select'
     });
 
-    window.location.href = `https://steamcommunity.com/openid/login?${params.toString()}`;
+    window.location.assign(`https://steamcommunity.com/openid/login?${params.toString()}`);
   }
 
   function setupAuthModalEvents() {
@@ -154,15 +184,31 @@ document.addEventListener('DOMContentLoaded', () => {
     authModalInitialized = true;
   }
 
-  function handleSteamCallbackPage() {
+  async function handleSteamCallbackPage() {
     if (!isSteamCallbackPage) return;
 
     const statusElement = document.querySelector('.steam-auth__status');
     const params = new URLSearchParams(window.location.search);
     const mode = params.get('openid.mode');
 
+    if (!mode) {
+      if (statusElement) statusElement.textContent = 'Steam не вернул параметры авторизации. Закройте вкладку и войдите через Steam повторно.';
+      return;
+    }
+
     if (mode === 'cancel') {
       if (statusElement) statusElement.textContent = 'Авторизация Steam отменена. Попробуйте снова.';
+      return;
+    }
+
+    if (mode !== 'id_res') {
+      if (statusElement) statusElement.textContent = 'Ошибка Steam авторизации. Попробуйте снова.';
+      return;
+    }
+
+    const opEndpoint = params.get('openid.op_endpoint');
+    if (opEndpoint && !opEndpoint.startsWith('https://steamcommunity.com/openid')) {
+      if (statusElement) statusElement.textContent = 'Steam вернул недоверенный ответ авторизации. Попробуйте снова.';
       return;
     }
 
@@ -170,17 +216,27 @@ document.addEventListener('DOMContentLoaded', () => {
     const steamIdMatch = claimedId.match(/openid(?:\.id|\/id)\/(\d+)$/);
 
     if (!steamIdMatch) {
-      if (statusElement) statusElement.textContent = 'Ошибка Steam авторизации. Параметры не получены.';
+      if (statusElement) statusElement.textContent = 'Ошибка Steam авторизации. Steam ID не получен.';
       return;
     }
 
     const steamId = steamIdMatch[1];
-    saveCurrentUser({
+    const basicUser = {
       steamId,
       email: `steam_${steamId}@barelands.local`,
       displayName: `steam_${steamId}`,
       avatarUrl: `https://steamcommunity.com/profiles/${steamId}/avatar/`
-    });
+    };
+
+    try {
+      if (statusElement) statusElement.textContent = 'Получаем данные профиля Steam...';
+      const enrichedUser = await loadSteamProfile(steamId, basicUser);
+      saveCurrentUser(enrichedUser);
+    } catch (error) {
+      console.error('Не удалось сохранить Steam профиль:', error);
+      if (statusElement) statusElement.textContent = 'Не удалось сохранить профиль в браузере. Проверьте разрешения localStorage и попробуйте снова.';
+      return;
+    }
 
     if (statusElement) statusElement.textContent = 'Авторизация через Steam успешна. Перенаправление...';
     setTimeout(() => redirectToCabinet(), 1200);

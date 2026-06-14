@@ -1,14 +1,26 @@
-document.addEventListener('DOMContentLoaded', () => {
+import { getDefaultAvatarUrl, loadSteamProfile } from './steam-profile.js';
+
+document.addEventListener('DOMContentLoaded', async () => {
   const storageKey = 'barelandsUser';
-  const currentUser = JSON.parse(localStorage.getItem(storageKey) || 'null');
   const nameNode = document.querySelector('.cabinet__name');
   const steamIdNode = document.querySelector('.cabinet__steam-id');
   const avatarImg = document.querySelector('.cabinet__avatar-img');
   const avatarFallback = document.querySelector('.cabinet__avatar-fallback');
+  let currentUser;
+
+  try {
+    currentUser = JSON.parse(localStorage.getItem(storageKey) || 'null');
+  } catch {
+    currentUser = null;
+  }
 
   if (!currentUser) {
     return;
   }
+
+  const saveCurrentUser = (user) => {
+    localStorage.setItem(storageKey, JSON.stringify(user));
+  };
 
   const normalizeDisplayName = (user) => {
     if (!user) return 'Игрок';
@@ -38,21 +50,30 @@ document.addEventListener('DOMContentLoaded', () => {
   const applyAvatar = (url) => {
     if (!url || !avatarImg) return;
     avatarImg.src = url;
-    avatarImg.addEventListener('load', () => {
+    avatarImg.onload = () => {
       avatarImg.classList.add('loaded');
       if (avatarFallback) avatarFallback.style.opacity = '0';
-    });
-    avatarImg.addEventListener('error', () => {
+    };
+    avatarImg.onerror = () => {
       if (avatarImg.parentNode) avatarImg.parentNode.removeChild(avatarImg);
-    });
+    };
   };
 
-  const init = () => {
-    updateProfileView(currentUser);
+  const refreshSteamProfile = async () => {
+    if (!currentUser.steamId) return;
 
-    const avatarUrl = currentUser.avatarUrl || (currentUser.steamId ? `https://steamcommunity.com/profiles/${currentUser.steamId}/avatar/` : null);
-    if (avatarUrl) applyAvatar(avatarUrl);
+    try {
+      const updatedUser = await loadSteamProfile(currentUser.steamId, currentUser);
+      currentUser = updatedUser;
+      saveCurrentUser(updatedUser);
+      updateProfileView(updatedUser);
+      applyAvatar(updatedUser.avatarUrl || getDefaultAvatarUrl(updatedUser.steamId));
+    } catch (error) {
+      console.warn('Не удалось обновить профиль Steam:', error);
+    }
   };
 
-  init();
+  updateProfileView(currentUser);
+  applyAvatar(currentUser.avatarUrl || getDefaultAvatarUrl(currentUser.steamId));
+  await refreshSteamProfile();
 });
