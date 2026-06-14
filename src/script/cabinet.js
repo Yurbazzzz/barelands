@@ -2,16 +2,22 @@ import { getDefaultAvatarUrl, loadSteamProfile } from './steam-profile.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
   const storageKey = 'barelandsUser';
+  const maxAvatarFileSize = 2 * 1024 * 1024;
   const nameNode = document.querySelector('.cabinet__name');
   const steamIdNode = document.querySelector('.cabinet__steam-id');
   const avatarImg = document.querySelector('.cabinet__avatar-img');
   const avatarFallback = document.querySelector('.cabinet__avatar-fallback');
-  const nicknameInput = document.querySelector('.cabinet__nickname-input');
-  const avatarInput = document.querySelector('.cabinet__avatar-input');
-  const saveButton = document.querySelector('.cabinet__save-button');
+  const avatarButton = document.querySelector('.cabinet__avatar-button');
+  const avatarFileInput = document.querySelector('.cabinet__avatar-file-input');
+  const editNameButton = document.querySelector('.cabinet__edit-name-button');
+  const nicknameEditor = document.querySelector('.cabinet__nickname-editor');
+  const nicknameEditorInput = document.querySelector('.cabinet__nickname-editor-input');
+  const saveNicknameButton = document.querySelector('.cabinet__save-button');
+  const cancelNicknameButton = document.querySelector('.cabinet__cancel-button');
   const resetButton = document.querySelector('.cabinet__reset-button');
   const editMessage = document.querySelector('.cabinet__edit-message');
   let currentUser;
+  let nicknameDraft = '';
 
   try {
     currentUser = JSON.parse(localStorage.getItem(storageKey) || 'null');
@@ -73,20 +79,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     editMessage.classList.toggle('cabinet__edit-message--error', isError);
   };
 
-  const isValidAvatarUrl = (value) => {
-    if (!value) return true;
-    try {
-      const url = new URL(value);
-      return url.protocol === 'http:' || url.protocol === 'https:';
-    } catch {
-      return false;
-    }
-  };
-
-  const syncEditForm = () => {
-    if (nicknameInput) nicknameInput.value = currentUser.nickname || currentUser.displayName || '';
-    if (avatarInput) avatarInput.value = currentUser.avatarUrl || '';
-  };
+  const readFileAsDataUrl = (file) => new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(reader.error || new Error('Не удалось прочитать файл'));
+    reader.readAsDataURL(file);
+  });
 
   const mergeSteamProfile = (updatedUser) => {
     const nextUser = {
@@ -115,23 +113,30 @@ document.addEventListener('DOMContentLoaded', async () => {
       saveCurrentUser(updatedUser);
       updateProfileView(updatedUser);
       applyAvatar(updatedUser.avatarUrl || getDefaultAvatarUrl(updatedUser.steamId));
-      syncEditForm();
     } catch (error) {
       console.warn('Не удалось обновить профиль Steam:', error);
     }
   };
 
-  const saveProfile = () => {
-    const displayName = nicknameInput?.value.trim().slice(0, 32) || '';
-    const avatarUrl = avatarInput?.value.trim() || '';
+  const showNicknameEditor = () => {
+    nicknameDraft = currentUser.nickname || currentUser.displayName || '';
+    nicknameEditorInput.value = nicknameDraft;
+    nicknameEditor.hidden = false;
+    editNameButton.setAttribute('aria-expanded', 'true');
+    nicknameEditorInput.focus();
+  };
+
+  const hideNicknameEditor = (clearMessage = false) => {
+    nicknameEditor.hidden = true;
+    editNameButton.setAttribute('aria-expanded', 'false');
+    if (clearMessage) showEditMessage('');
+  };
+
+  const saveNickname = () => {
+    const displayName = nicknameEditorInput.value.trim().slice(0, 32) || '';
 
     if (!displayName) {
       showEditMessage('Введите никнейм профиля.', true);
-      return;
-    }
-
-    if (!isValidAvatarUrl(avatarUrl)) {
-      showEditMessage('Введите корректную ссылку на аватар, начинающуюся с http:// или https://.', true);
       return;
     }
 
@@ -139,20 +144,50 @@ document.addEventListener('DOMContentLoaded', async () => {
       ...currentUser,
       displayName,
       nickname: displayName,
-      avatarUrl: avatarUrl || getDefaultAvatarUrl(currentUser.steamId),
-      customDisplayName: true,
-      customAvatarUrl: Boolean(avatarUrl)
+      customDisplayName: true
     };
 
     try {
       saveCurrentUser(currentUser);
       updateProfileView(currentUser);
-      applyAvatar(currentUser.avatarUrl || getDefaultAvatarUrl(currentUser.steamId));
-      syncEditForm();
-      showEditMessage('Профиль сохранён.');
+      hideNicknameEditor(true);
+      showEditMessage('Никнейм сохранён.');
     } catch (error) {
-      console.error('Не удалось сохранить профиль:', error);
-      showEditMessage('Не удалось сохранить профиль в браузере.', true);
+      console.error('Не удалось сохранить никнейм:', error);
+      showEditMessage('Не удалось сохранить никнейм в браузере.', true);
+    }
+  };
+
+  const cancelNickname = () => {
+    nicknameEditorInput.value = nicknameDraft;
+    hideNicknameEditor(true);
+  };
+
+  const saveAvatarFile = async (file) => {
+    if (!file) return;
+    if (file.type && !file.type.startsWith('image/')) {
+      showEditMessage('Выберите изображение для аватара.', true);
+      return;
+    }
+    if (file.size > maxAvatarFileSize) {
+      showEditMessage('Выберите изображение размером не больше 2 МБ.', true);
+      return;
+    }
+
+    try {
+      const avatarUrl = await readFileAsDataUrl(file);
+      currentUser = {
+        ...currentUser,
+        avatarUrl,
+        customAvatarUrl: true
+      };
+      saveCurrentUser(currentUser);
+      updateProfileView(currentUser);
+      applyAvatar(currentUser.avatarUrl || getDefaultAvatarUrl(currentUser.steamId));
+      showEditMessage('Аватар сохранён.');
+    } catch (error) {
+      console.error('Не удалось сохранить аватар:', error);
+      showEditMessage('Не удалось сохранить аватар. Попробуйте другой файл.', true);
     }
   };
 
@@ -172,7 +207,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       saveCurrentUser(updatedUser);
       updateProfileView(updatedUser);
       applyAvatar(updatedUser.avatarUrl || getDefaultAvatarUrl(updatedUser.steamId));
-      syncEditForm();
+      hideNicknameEditor(true);
       showEditMessage('Данные профиля обновлены из Steam.');
     } catch (error) {
       console.error('Не удалось обновить профиль Steam:', error);
@@ -180,11 +215,23 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   };
 
-  if (saveButton) saveButton.addEventListener('click', saveProfile);
+  if (avatarButton) avatarButton.addEventListener('click', () => avatarFileInput?.click());
+  if (avatarFileInput) avatarFileInput.addEventListener('change', (event) => {
+    saveAvatarFile(event.target.files?.[0]);
+    event.target.value = '';
+  });
+  if (editNameButton) editNameButton.addEventListener('click', showNicknameEditor);
+  if (saveNicknameButton) saveNicknameButton.addEventListener('click', saveNickname);
+  if (cancelNicknameButton) cancelNicknameButton.addEventListener('click', cancelNickname);
+  if (nicknameEditorInput) {
+    nicknameEditorInput.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') saveNickname();
+      if (event.key === 'Escape') cancelNickname();
+    });
+  }
   if (resetButton) resetButton.addEventListener('click', resetSteamProfile);
 
   updateProfileView(currentUser);
   applyAvatar(currentUser.avatarUrl || getDefaultAvatarUrl(currentUser.steamId));
-  syncEditForm();
   await refreshSteamProfile();
 });

@@ -40,13 +40,24 @@
     <main class="cabinet">
         <div class="cabinet__panel">
             <div class="cabinet__header">
-                <div class="cabinet__avatar" aria-label="Аватар профиля">
+                <button class="cabinet__avatar-button" type="button" aria-label="Заменить аватар">
                     <span class="cabinet__avatar-fallback">ST</span>
                     <img class="cabinet__avatar-img" alt="Аватар профиля" src="" />
-                </div>
+                </button>
+                <input class="cabinet__avatar-file-input" type="file" accept="image/*" hidden />
                 <div class="cabinet__info">
                     <p class="cabinet__welcome">Личный кабинет</p>
-                    <h1 class="cabinet__name">Игрок</h1>
+                    <div class="cabinet__name-row">
+                        <h1 class="cabinet__name">Игрок</h1>
+                        <button class="cabinet__edit-name-button" type="button" aria-label="Изменить никнейм">✎</button>
+                    </div>
+                    <div class="cabinet__nickname-editor" hidden>
+                        <input class="cabinet__nickname-editor-input" type="text" maxlength="32" autocomplete="nickname" placeholder="Введите никнейм">
+                        <div class="cabinet__nickname-editor-actions">
+                            <button class="cabinet__save-button" type="button">Сохранить</button>
+                            <button class="cabinet__cancel-button" type="button">Отмена</button>
+                        </div>
+                    </div>
                     <p class="cabinet__subtitle">Steam ID: <span class="cabinet__steam-id">Не задан</span></p>
                 </div>
             </div>
@@ -66,20 +77,10 @@
                         <p class="cabinet__stat-value">0</p>
                     </article>
                 </div>
-                <section class="cabinet__profile-edit" aria-label="Редактирование профиля">
-                    <h2 class="cabinet__edit-title">Редактирование профиля</h2>
-                    <div class="cabinet__edit-grid">
-                        <label class="cabinet__edit-field">
-                            <span>Никнейм</span>
-                            <input class="cabinet__nickname-input" type="text" maxlength="32" autocomplete="nickname" placeholder="Введите никнейм">
-                        </label>
-                        <label class="cabinet__edit-field">
-                            <span>Ссылка на аватар</span>
-                            <input class="cabinet__avatar-input" type="url" autocomplete="url" placeholder="https://example.com/avatar.jpg">
-                        </label>
-                    </div>
+                <section class="cabinet__profile-edit" aria-label="Подсказки профиля">
+                    <h2 class="cabinet__edit-title">Профиль</h2>
+                    <p class="cabinet__edit-hint">Нажмите на аватар, чтобы выбрать фото с устройства. Никнейм меняется через кнопку карандаша рядом с именем.</p>
                     <div class="cabinet__edit-actions">
-                        <button class="cabinet__save-button" type="button">Сохранить профиль</button>
                         <button class="cabinet__reset-button" type="button">Вернуть данные Steam</button>
                     </div>
                     <p class="cabinet__edit-message" aria-live="polite"></p>
