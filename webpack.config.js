@@ -38,7 +38,7 @@ module.exports = {
       directory: path.resolve(__dirname, 'dist'),
       publicPath: '/',
     },
-    port: 3000,
+    port: 54112,
     open: true,
     hot: true,
     compress: true,
