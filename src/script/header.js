@@ -247,7 +247,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => redirectToCabinet(), 1200);
   }
 
-  function initAuthState() {
+function initAuthState() {
     if (isCabinetPage && !isLoggedIn()) {
       redirectToHome();
       return;
@@ -257,30 +257,12 @@ document.addEventListener('DOMContentLoaded', () => {
       handleSteamCallbackPage();
     }
 
-    if (isCabinetPage) {
-      const currentUser = getCurrentUser();
-      const nameNode = document.querySelector('.cabinet__name');
-      const steamIdNode = document.querySelector('.cabinet__steam-id');
-      const avatarNode = document.querySelector('.cabinet__avatar-button');
-      const displayName = getProfileDisplayName(currentUser);
-
-      if (nameNode) {
-        nameNode.textContent = displayName;
-      }
-      if (steamIdNode && currentUser && currentUser.steamId) {
-        steamIdNode.textContent = currentUser.steamId;
-      }
-      if (avatarNode) {
-        avatarNode.textContent = getProfileInitials(currentUser);
-      }
-    }
-
     if (cabinetLogoutBtn) {
-cabinetLogoutBtn.addEventListener('click', async () => {
-         await saveProfileToServer(getCurrentUser());
-         removeCurrentUser();
-         redirectToHome();
-         });
+      cabinetLogoutBtn.addEventListener('click', async () => {
+        await saveProfileToServer(getCurrentUser());
+        removeCurrentUser();
+        redirectToHome();
+      });
     }
 
     createAuthModal();

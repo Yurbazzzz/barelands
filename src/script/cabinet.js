@@ -1,5 +1,5 @@
 import { getDefaultAvatarUrl, loadSteamProfile } from './steam-profile.js';
-import { saveProfileToServer } from './profile-api.js';
+import { saveProfileToServer, fetchSavedProfile } from './profile-api.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
   const storageKey = 'barelandsUser';
@@ -16,27 +16,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   const saveNicknameButton = document.querySelector('.cabinet__save-button');
   const cancelNicknameButton = document.querySelector('.cabinet__cancel-button');
   const editMessage = document.querySelector('.cabinet__edit-message');
-  let currentUser;
-  let nicknameDraft = '';
+  const logoutButton = document.querySelector('.cabinet__logout-button');
 
-  try {
-    currentUser = JSON.parse(localStorage.getItem(storageKey) || 'null');
-  } catch {
-    currentUser = null;
-  }
+  let currentUser = getUserFromStorage();
 
-  if (!currentUser) {
+  if (!currentUser || !currentUser.steamId) {
+    window.location.href = '../index.html';
     return;
   }
-
-  const saveCurrentUser = async (user) => {
-    localStorage.setItem(storageKey, JSON.stringify(user));
-    const persistedUser = await saveProfileToServer(user);
-    if (persistedUser) {
-      localStorage.setItem(storageKey, JSON.stringify(persistedUser));
-      currentUser = persistedUser;
-    }
-  };
 
   const normalizeDisplayName = (user) => {
     if (!user) return 'Игрок';
@@ -59,8 +46,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     const initials = makeInitials(displayName);
 
     if (nameNode) nameNode.textContent = displayName;
-    if (steamIdNode && user.steamId) steamIdNode.textContent = user.steamId;
+    if (steamIdNode) steamIdNode.textContent = user.steamId || 'Не задан';
     if (avatarFallback) avatarFallback.textContent = initials;
+  };
+
+  const showMessage = (message, isError = false) => {
+    if (!editMessage) return;
+    editMessage.textContent = message;
+    editMessage.classList.toggle('cabinet__edit-message--error', isError);
   };
 
   const applyAvatar = (url) => {
@@ -78,12 +71,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
   };
 
-  const showEditMessage = (message, isError = false) => {
-    if (!editMessage) return;
-    editMessage.textContent = message;
-    editMessage.classList.toggle('cabinet__edit-message--error', isError);
-  };
-
   const readFileAsDataUrl = (file) => new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(reader.result);
@@ -91,41 +78,32 @@ document.addEventListener('DOMContentLoaded', async () => {
     reader.readAsDataURL(file);
   });
 
-  const mergeSteamProfile = (updatedUser) => {
-    const nextUser = {
-      ...currentUser,
-      ...updatedUser
-    };
-
-    if (currentUser.customDisplayName) {
-      nextUser.displayName = currentUser.displayName;
-      nextUser.nickname = currentUser.nickname;
+  const saveToServer = async (user) => {
+    try {
+      const persistedUser = await saveProfileToServer(user);
+      if (persistedUser) {
+        saveUserToStorage(persistedUser);
+        currentUser = persistedUser;
+      }
+    } catch (error) {
+      console.warn('Не удалось сохранить профиль на сервере:', error.message);
     }
-
-    if (currentUser.customAvatarUrl) {
-      nextUser.avatarUrl = currentUser.avatarUrl;
-    }
-
-    return nextUser;
   };
 
-const refreshSteamProfile = async () => {
-    if (!currentUser.steamId || currentUser.customAvatarUrl) return;
+  const saveUserToStorage = (user) => {
+    localStorage.setItem(storageKey, JSON.stringify(user));
+  };
 
+  const getUserFromStorage = () => {
     try {
-      const updatedUser = mergeSteamProfile(await loadSteamProfile(currentUser.steamId, currentUser));
-      currentUser = updatedUser;
-      await saveCurrentUser(updatedUser);
-      updateProfileView(updatedUser);
-      applyAvatar(updatedUser.avatarUrl || getDefaultAvatarUrl(updatedUser.steamId));
-    } catch (error) {
-      console.warn('Не удалось обновить профиль Steam:', error);
+      return JSON.parse(localStorage.getItem(storageKey) || 'null');
+    } catch {
+      return null;
     }
   };
 
   const showNicknameEditor = () => {
-    nicknameDraft = currentUser.nickname || currentUser.displayName || '';
-    nicknameEditorInput.value = nicknameDraft;
+    nicknameEditorInput.value = currentUser.nickname || currentUser.displayName || '';
     nicknameEditor.hidden = false;
     editNameButton.setAttribute('aria-expanded', 'true');
     nicknameEditorInput.focus();
@@ -134,14 +112,14 @@ const refreshSteamProfile = async () => {
   const hideNicknameEditor = (clearMessage = false) => {
     nicknameEditor.hidden = true;
     editNameButton.setAttribute('aria-expanded', 'false');
-    if (clearMessage) showEditMessage('');
+    if (clearMessage) showMessage('');
   };
 
   const saveNickname = async () => {
-    const displayName = nicknameEditorInput.value.trim().slice(0, 32) || '';
+    const displayName = nicknameEditorInput.value.trim().slice(0, 32);
 
     if (!displayName) {
-      showEditMessage('Введите никнейм профиля.', true);
+      showMessage('Введите никнейм профиля.', true);
       return;
     }
 
@@ -152,30 +130,23 @@ const refreshSteamProfile = async () => {
       customDisplayName: true
     };
 
-    try {
-      await saveCurrentUser(currentUser);
-      updateProfileView(currentUser);
-      hideNicknameEditor(true);
-      showEditMessage('Никнейм сохранён.');
-    } catch (error) {
-      console.error('Не удалось сохранить никнейм:', error);
-      showEditMessage('Не удалось сохранить никнейм в браузере.', true);
-    }
-  };
-
-  const cancelNickname = () => {
-    nicknameEditorInput.value = nicknameDraft;
+    saveUserToStorage(currentUser);
+    await saveToServer(currentUser);
+    updateProfileView(currentUser);
     hideNicknameEditor(true);
+    showMessage('Никнейм сохранён.');
   };
 
-  const saveAvatarFile = async (file) => {
+  const saveAvatar = async (file) => {
     if (!file) return;
+
     if (file.type && !file.type.startsWith('image/')) {
-      showEditMessage('Выберите изображение для аватара.', true);
+      showMessage('Выберите изображение для аватара.', true);
       return;
     }
+
     if (file.size > maxAvatarFileSize) {
-      showEditMessage('Выберите изображение размером не больше 2 МБ.', true);
+      showMessage('Выберите изображение размером не больше 2 МБ.', true);
       return;
     }
 
@@ -186,30 +157,68 @@ const refreshSteamProfile = async () => {
         avatarUrl,
         customAvatarUrl: true
       };
-      await saveCurrentUser(currentUser);
-      updateProfileView(currentUser);
-      applyAvatar(currentUser.avatarUrl || getDefaultAvatarUrl(currentUser.steamId));
-      showEditMessage('Аватар сохранён.');
+      saveUserToStorage(currentUser);
+      await saveToServer(currentUser);
+      applyAvatar(avatarUrl);
+      showMessage('Аватар сохранён.');
     } catch (error) {
       console.error('Не удалось сохранить аватар:', error);
-      showEditMessage('Не удалось сохранить аватар. Попробуйте другой файл.', true);
+      showMessage('Не удалось сохранить аватар. Попробуйте другой файл.', true);
     }
   };
 
-  if (avatarButton) avatarButton.addEventListener('click', () => avatarFileInput?.click());
-  if (avatarFileInput) avatarFileInput.addEventListener('change', (event) => {
-    saveAvatarFile(event.target.files?.[0]);
+  const handleLogout = async () => {
+    await saveToServer(currentUser);
+    localStorage.removeItem(storageKey);
+    window.location.href = '../index.html';
+  };
+
+  const refreshSteamProfile = async () => {
+    if (!currentUser.steamId || currentUser.customAvatarUrl) return;
+
+    try {
+      const savedProfile = await fetchSavedProfile(currentUser.steamId);
+      const mergedUser = {
+        ...currentUser,
+        ...savedProfile,
+        steamId: currentUser.steamId
+      };
+
+      if (savedProfile.avatarUrl && savedProfile.customAvatarUrl) {
+        currentUser = mergedUser;
+        updateProfileView(currentUser);
+        applyAvatar(currentUser.avatarUrl || getDefaultAvatarUrl(currentUser.steamId));
+        return;
+      }
+
+      const updatedUser = await loadSteamProfile(currentUser.steamId, mergedUser);
+      currentUser = {
+        ...updatedUser,
+        steamId: currentUser.steamId
+      };
+      saveUserToStorage(currentUser);
+      await saveToServer(currentUser);
+      updateProfileView(currentUser);
+      applyAvatar(currentUser.avatarUrl || getDefaultAvatarUrl(currentUser.steamId));
+    } catch (error) {
+      console.warn('Не удалось обновить профиль Steam:', error);
+    }
+  };
+
+  avatarButton?.addEventListener('click', () => avatarFileInput?.click());
+  avatarFileInput?.addEventListener('change', (event) => {
+    saveAvatar(event.target.files?.[0]);
     event.target.value = '';
   });
-  if (editNameButton) editNameButton.addEventListener('click', showNicknameEditor);
-  if (saveNicknameButton) saveNicknameButton.addEventListener('click', saveNickname);
-  if (cancelNicknameButton) cancelNicknameButton.addEventListener('click', cancelNickname);
-  if (nicknameEditorInput) {
-    nicknameEditorInput.addEventListener('keydown', (event) => {
-      if (event.key === 'Enter') saveNickname();
-      if (event.key === 'Escape') cancelNickname();
-    });
-  }
+  editNameButton?.addEventListener('click', showNicknameEditor);
+  saveNicknameButton?.addEventListener('click', saveNickname);
+  cancelNicknameButton?.addEventListener('click', () => hideNicknameEditor(true));
+  logoutButton?.addEventListener('click', handleLogout);
+
+  nicknameEditorInput?.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter') saveNickname();
+    if (event.key === 'Escape') hideNicknameEditor(true);
+  });
 
   updateProfileView(currentUser);
   applyAvatar(currentUser.avatarUrl || getDefaultAvatarUrl(currentUser.steamId));
