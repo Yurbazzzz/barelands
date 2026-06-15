@@ -174,24 +174,23 @@ document.addEventListener('DOMContentLoaded', async () => {
   };
 
   const refreshSteamProfile = async () => {
-    if (!currentUser.steamId || currentUser.customAvatarUrl) return;
+    if (!currentUser.steamId) return;
+    if (currentUser.customAvatarUrl && currentUser.avatarUrl) return;
 
     try {
       const savedProfile = await fetchSavedProfile(currentUser.steamId);
-      const mergedUser = {
-        ...currentUser,
-        ...savedProfile,
-        steamId: currentUser.steamId
-      };
-
-      if (savedProfile.avatarUrl && savedProfile.customAvatarUrl) {
-        currentUser = mergedUser;
+      if (savedProfile && savedProfile.avatarUrl && savedProfile.customAvatarUrl) {
+        currentUser = {
+          ...currentUser,
+          ...savedProfile,
+          steamId: currentUser.steamId
+        };
         updateProfileView(currentUser);
-        applyAvatar(currentUser.avatarUrl || getDefaultAvatarUrl(currentUser.steamId));
+        applyAvatar(currentUser.avatarUrl);
         return;
       }
 
-      const updatedUser = await loadSteamProfile(currentUser.steamId, mergedUser);
+      const updatedUser = await loadSteamProfile(currentUser.steamId, currentUser);
       currentUser = {
         ...updatedUser,
         steamId: currentUser.steamId
@@ -221,6 +220,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   updateProfileView(currentUser);
-  applyAvatar(currentUser.avatarUrl || getDefaultAvatarUrl(currentUser.steamId));
+  applyAvatar(currentUser.avatarUrl || (currentUser.steamId ? getDefaultAvatarUrl(currentUser.steamId) : null));
   await refreshSteamProfile();
 });

@@ -223,24 +223,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const steamId = steamIdMatch[1];
     const savedProfile = await fetchSavedProfile(steamId);
-    const basicUser = {
-      ...savedProfile,
-      steamId,
-      email: savedProfile.email || `steam_${steamId}@barelands.local`,
-      displayName: savedProfile.displayName || `steam_${steamId}`,
-      avatarUrl: savedProfile.avatarUrl || `https://steamcommunity.com/profiles/${steamId}/avatar/`,
-      customAvatarUrl: savedProfile.customAvatarUrl || false
-    };
 
-    try {
-      if (statusElement) statusElement.textContent = 'Получаем данные профиля Steam...';
-      const enrichedUser = await loadSteamProfile(steamId, basicUser);
-      const persistedUser = await saveProfileToServer(enrichedUser);
-      saveCurrentUser(persistedUser);
-    } catch (error) {
-      console.error('Не удалось сохранить Steam профиль:', error);
-      if (statusElement) statusElement.textContent = 'Не удалось сохранить профиль в браузере. Проверьте разрешения localStorage и попробуйте снова.';
-      return;
+    if (savedProfile && savedProfile.customAvatarUrl && savedProfile.avatarUrl) {
+      saveCurrentUser({
+        ...savedProfile,
+        steamId,
+        email: savedProfile.email || `steam_${steamId}@barelands.local`,
+        displayName: savedProfile.displayName || `steam_${steamId}`
+      });
+    } else {
+      const basicUser = {
+        ...savedProfile,
+        steamId,
+        email: savedProfile.email || `steam_${steamId}@barelands.local`,
+        displayName: savedProfile.displayName || `steam_${steamId}`,
+        avatarUrl: savedProfile.avatarUrl || `https://steamcommunity.com/profiles/${steamId}/avatar/`,
+        customAvatarUrl: savedProfile.customAvatarUrl || false
+      };
+
+      try {
+        if (statusElement) statusElement.textContent = 'Получаем данные профиля Steam...';
+        const enrichedUser = await loadSteamProfile(steamId, basicUser);
+        const persistedUser = await saveProfileToServer(enrichedUser);
+        saveCurrentUser(persistedUser);
+      } catch (error) {
+        console.error('Не удалось сохранить Steam профиль:', error);
+        saveCurrentUser(basicUser);
+      }
     }
 
     if (statusElement) statusElement.textContent = 'Авторизация через Steam успешна. Перенаправление...';
