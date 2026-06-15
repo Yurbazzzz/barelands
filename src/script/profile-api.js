@@ -1,4 +1,4 @@
-const profileApiUrl = window.BARELANDS_PROFILE_API_URL || 'http://localhost:3001/api/profile';
+const profileApiUrl = window.BARELANDS_PROFILE_API_URL || '/api/profile';
 
 export async function fetchSavedProfile(steamId) {
   if (!steamId) return {};
