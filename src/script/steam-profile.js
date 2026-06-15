@@ -106,14 +106,17 @@ async function fetchJinaProfile(steamId) {
 
 function mergeProfile(user, steamId, profile) {
   const displayName = profile?.nickname || getDefaultDisplayName(user, steamId);
-  const avatarUrl = profile?.avatarUrl || getDefaultAvatarUrl(steamId);
+  const effectiveAvatarUrl = user?.customAvatarUrl ? user.avatarUrl : (profile?.avatarUrl || getDefaultAvatarUrl(steamId));
+  const effectiveNickname = profile?.nickname || user?.nickname;
 
   return {
     ...user,
     steamId,
     displayName,
-    nickname: profile?.nickname || user?.nickname,
-    avatarUrl
+    nickname: effectiveNickname,
+    avatarUrl: effectiveAvatarUrl,
+    customDisplayName: user?.customDisplayName,
+    customAvatarUrl: user?.customAvatarUrl
   };
 }
 
