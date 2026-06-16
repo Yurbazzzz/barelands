@@ -125,6 +125,59 @@
    display: flex;
    align-items: center;
    gap: 12px;
+   flex-wrap: wrap;
+}
+
+.cabinet__name {
+   margin: 0;
+   font-size: clamp(2rem, 2.5vw, 3.4rem);
+   color: #fff;
+   line-height: 1.05;
+}
+
+.cabinet__name--editable {
+   border: 1px solid transparent;
+   border-radius: 14px;
+   padding: 4px 8px;
+   margin-left: -8px;
+   cursor: text;
+   outline: none;
+   transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.cabinet__name--editable:hover,
+.cabinet__name--editable:focus {
+   border-color: rgba(255, 99, 71, 0.6);
+   background: rgba(255, 99, 71, 0.08);
+}
+
+.cabinet__name-actions {
+   display: flex;
+   align-items: center;
+   gap: 8px;
+}
+
+.cabinet__save-name-button {
+   padding: 10px 16px;
+   border: none;
+   border-radius: 999px;
+   background: rgba(255, 99, 71, 0.9);
+   color: #fff;
+   font-weight: 700;
+   cursor: pointer;
+   transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.cabinet__save-name-button:hover {
+   transform: translateY(-1px);
+   background: #ff6347;
+}
+
+.cabinet__nickname-hint {
+   margin: -4px 0 0;
+   color: #a0a0a0;
+   font-size: 14px;
+   cursor: text;
 }
 
 .cabinet__edit-name-button {

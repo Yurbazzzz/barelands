@@ -2,7 +2,7 @@ import { getDefaultAvatarUrl, loadSteamProfile } from './steam-profile.js';
 import { saveProfileToServer, fetchSavedProfile } from './profile-api.js';
 
 document.addEventListener('DOMContentLoaded', () => {
-  const nameNode = document.querySelector('.cabinet__name');
+  const nameNode = document.querySelector('.cabinet__name--editable') || document.querySelector('.cabinet__name');
   if (!nameNode) return;
 
   const storageKey = 'barelandsUser';
@@ -12,24 +12,28 @@ document.addEventListener('DOMContentLoaded', () => {
   const avatarImg = document.querySelector('.cabinet__avatar-img');
   const avatarFallback = document.querySelector('.cabinet__avatar-fallback');
   const avatarButton = document.querySelector('.cabinet__avatar-button');
+  const avatarFileInput = document.querySelector('.cabinet__avatar-file-input');
+  const saveNameButton = document.querySelector('.cabinet__save-name-button');
+  const nicknameHint = document.querySelector('.cabinet__nickname-hint');
   const onlineStatus = document.querySelector('.cabinet__online-status');
   const privilegeValue = document.querySelector('.cabinet__privilege-value');
-  const avatarFileInput = document.querySelector('.cabinet__avatar-file-input');
-  const editNameButton = document.querySelector('.cabinet__edit-name-button');
-  const nicknameEditor = document.querySelector('.cabinet__nickname-editor');
-  const nicknameEditorInput = document.querySelector('.cabinet__nickname-editor-input');
-  const saveNicknameButton = document.querySelector('.cabinet__save-button');
-  const cancelNicknameButton = document.querySelector('.cabinet__cancel-button');
   const editMessage = document.querySelector('.cabinet__edit-message');
   const logoutButton = document.querySelector('.cabinet__logout-button');
   const balanceAmount = document.querySelector('.cabinet__balance-amount');
 
-  let currentUser = getUserFromStorage();
+  const createDefaultUser = () => ({
+    steamId: '0',
+    displayName: 'Игрок',
+    nickname: '',
+    avatarUrl: '',
+    customDisplayName: true,
+    customAvatarUrl: false,
+    balance: 0,
+    privilege: 'Обычный',
+    isOnline: false
+  });
 
-  if (!currentUser || !currentUser.steamId) {
-    window.location.href = '../index.html';
-    return;
-  }
+  let currentUser = getUserFromStorage() || createDefaultUser();
 
   const normalizeDisplayName = (user) => {
     if (!user) return 'Игрок';
@@ -153,7 +157,7 @@ document.addEventListener('DOMContentLoaded', () => {
       localStorage.setItem(storageKey, JSON.stringify(user));
     } catch (error) {
       console.warn('Не удалось сохранить профиль в браузере:', error);
-      showMessage('Не удалось сохранить изменения в браузере. Освободите место или выберите файл меньше.', 'error');
+      showMessage('Не удалось сохранить изменения в браузере. Выберите файл меньше.', 'error');
     }
   };
 
@@ -166,7 +170,7 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   const saveToServer = async (user) => {
-    if (!user?.steamId) return user;
+    if (!user?.steamId || user.steamId === '0') return user;
 
     try {
       const persistedUser = await saveProfileToServer(user);
@@ -181,28 +185,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
-  const showNicknameEditor = () => {
-    if (!nicknameEditor || !nicknameEditorInput || !editNameButton) return;
-    nicknameEditorInput.value = currentUser.displayName || currentUser.nickname || '';
-    nicknameEditor.hidden = false;
-    editNameButton.setAttribute('aria-expanded', 'true');
-    window.setTimeout(() => nicknameEditorInput.focus(), 0);
-  };
+  const saveName = async () => {
+    if (!nameNode) return;
 
-  const hideNicknameEditor = (clearMessage = false) => {
-    if (!nicknameEditor || !editNameButton) return;
-    nicknameEditor.hidden = true;
-    editNameButton.setAttribute('aria-expanded', 'false');
-    if (clearMessage) showMessage('');
-  };
-
-  const saveNickname = async () => {
-    if (!nicknameEditorInput) return;
-
-    const displayName = nicknameEditorInput.value.replace(/\s+/g, ' ').trim().slice(0, 32);
+    const displayName = nameNode.textContent.replace(/\s+/g, ' ').trim().slice(0, 32);
 
     if (!displayName) {
-      showMessage('Введите никнейм профиля.', 'error');
+      nameNode.textContent = currentUser.displayName || 'Игрок';
+      showMessage('Введите имя профиля.', 'error');
       return;
     }
 
@@ -216,8 +206,7 @@ document.addEventListener('DOMContentLoaded', () => {
     saveUserToStorage(currentUser);
     await saveToServer(currentUser);
     updateProfileView(currentUser);
-    hideNicknameEditor(true);
-    showMessage('Никнейм сохранён.', 'success');
+    showMessage('Имя профиля сохранено.', 'success');
   };
 
   const saveAvatar = async (file) => {
@@ -259,7 +248,7 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   const refreshSteamProfile = () => {
-    if (!currentUser.steamId) return;
+    if (!currentUser.steamId || currentUser.steamId === '0') return;
     if (currentUser.customAvatarUrl && currentUser.customDisplayName) return;
 
     fetchSavedProfile(currentUser.steamId).then((savedProfile) => {
@@ -267,8 +256,14 @@ document.addEventListener('DOMContentLoaded', () => {
         currentUser = {
           ...currentUser,
           ...savedProfile,
-          steamId: currentUser.steamId
+          steamId: currentUser.steamId,
+          customDisplayName: currentUser.customDisplayName,
+          customAvatarUrl: currentUser.customAvatarUrl
         };
+        if (currentUser.customDisplayName) {
+          currentUser.displayName = currentUser.displayName || normalizeDisplayName(savedProfile);
+          currentUser.nickname = currentUser.displayName;
+        }
         updateProfileView(currentUser);
         applyAvatar(currentUser.avatarUrl);
         return;
@@ -295,15 +290,26 @@ document.addEventListener('DOMContentLoaded', () => {
     saveAvatar(event.target.files?.[0]);
     event.target.value = '';
   });
-  editNameButton?.addEventListener('click', showNicknameEditor);
-  saveNicknameButton?.addEventListener('click', saveNickname);
-  cancelNicknameButton?.addEventListener('click', () => hideNicknameEditor(true));
+  saveNameButton?.addEventListener('click', saveName);
   logoutButton?.addEventListener('click', handleLogout);
 
-  nicknameEditorInput?.addEventListener('keydown', (event) => {
-    if (event.key === 'Enter') saveNickname();
-    if (event.key === 'Escape') hideNicknameEditor(true);
+  nameNode.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      saveName();
+      nameNode.blur();
+    }
+
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      updateProfileView(currentUser);
+      nameNode.blur();
+    }
   });
+
+  if (nicknameHint) {
+    nicknameHint.addEventListener('click', () => nameNode.focus());
+  }
 
   updateProfileView(currentUser);
   applyAvatar(currentUser.avatarUrl || (currentUser.steamId ? getDefaultAvatarUrl(currentUser.steamId) : null));

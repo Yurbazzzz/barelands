@@ -257,11 +257,6 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
 function initAuthState() {
-    if (isCabinetPage && !isLoggedIn()) {
-      redirectToHome();
-      return;
-    }
-
     if (isSteamCallbackPage) {
       handleSteamCallbackPage();
     }
