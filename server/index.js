@@ -4,11 +4,37 @@ const path = require('path');
 const { URL } = require('url');
 
 const port = process.env.PORT || 3001;
+const rootDir = path.resolve(__dirname, '..');
+const distDir = path.join(rootDir, 'dist');
+const publicDir = fs.existsSync(distDir) ? distDir : path.join(rootDir, 'src');
 const profilesPath = path.join(__dirname, 'profiles.json');
+const profileApiPrefix = '/api/profile';
+
+const mimeTypes = {
+  '.html': 'text/html; charset=utf-8',
+  '.js': 'application/javascript; charset=utf-8',
+  '.css': 'text/css; charset=utf-8',
+  '.json': 'application/json; charset=utf-8',
+  '.png': 'image/png',
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.svg': 'image/svg+xml',
+  '.ico': 'image/x-icon',
+  '.woff': 'font/woff',
+  '.woff2': 'font/woff2'
+};
+
+function ensureProfilesFile() {
+  fs.mkdirSync(path.dirname(profilesPath), { recursive: true });
+  if (!fs.existsSync(profilesPath)) {
+    fs.writeFileSync(profilesPath, '{}');
+  }
+}
 
 function readProfiles() {
+  ensureProfilesFile();
+
   try {
-    if (!fs.existsSync(profilesPath)) return {};
     return JSON.parse(fs.readFileSync(profilesPath, 'utf8'));
   } catch {
     return {};
@@ -16,7 +42,10 @@ function readProfiles() {
 }
 
 function writeProfiles(profiles) {
-  fs.writeFileSync(profilesPath, JSON.stringify(profiles, null, 2));
+  ensureProfilesFile();
+  const tempPath = `${profilesPath}.tmp`;
+  fs.writeFileSync(tempPath, JSON.stringify(profiles, null, 2));
+  fs.renameSync(tempPath, profilesPath);
 }
 
 function sendJson(res, statusCode, data) {
@@ -77,6 +106,53 @@ function normalizeProfile(body) {
   };
 }
 
+function getSteamIdFromPath(pathname) {
+  return decodeURIComponent(pathname.replace(`${profileApiPrefix}/`, ''));
+}
+
+function resolveStaticPath(pathname) {
+  let decodedPath = pathname;
+
+  try {
+    decodedPath = decodeURIComponent(pathname);
+  } catch {
+    decodedPath = pathname;
+  }
+
+  if (decodedPath === '/') {
+    decodedPath = '/index.html';
+  }
+
+  const requestedPath = path.normalize(path.join(publicDir, decodedPath));
+  const relativePath = path.relative(publicDir, requestedPath);
+
+  if (relativePath.startsWith('..') || path.isAbsolute(relativePath)) {
+    return null;
+  }
+
+  if (fs.existsSync(requestedPath) && fs.statSync(requestedPath).isFile()) {
+    return requestedPath;
+  }
+
+  if (!path.extname(decodedPath)) {
+    const indexPath = path.join(publicDir, 'index.html');
+    if (fs.existsSync(indexPath)) {
+      return indexPath;
+    }
+  }
+
+  return null;
+}
+
+function sendStaticFile(res, filePath) {
+  const extension = path.extname(filePath).toLowerCase();
+  res.writeHead(200, {
+    'Content-Type': mimeTypes[extension] || 'application/octet-stream',
+    'Cache-Control': 'no-cache'
+  });
+  fs.createReadStream(filePath).pipe(res);
+}
+
 const server = http.createServer(async (req, res) => {
   const requestUrl = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
 
@@ -91,29 +167,50 @@ const server = http.createServer(async (req, res) => {
   }
 
   try {
-    if (req.method === 'GET' && requestUrl.pathname.startsWith('/api/profile/')) {
-      const steamId = decodeURIComponent(requestUrl.pathname.replace('/api/profile/', ''));
-      const profiles = readProfiles();
-      sendJson(res, 200, profiles[steamId] || null);
+    if (requestUrl.pathname.startsWith(profileApiPrefix)) {
+      if (req.method === 'GET') {
+        const steamId = requestUrl.searchParams.get('steamId') || getSteamIdFromPath(requestUrl.pathname);
+        if (!steamId) {
+          sendJson(res, 400, { error: 'steamId is required' });
+          return;
+        }
+
+        const profiles = readProfiles();
+        sendJson(res, 200, profiles[steamId] || null);
+        return;
+      }
+
+      if (req.method === 'POST' && requestUrl.pathname === profileApiPrefix) {
+        const body = await readBody(req);
+        const profile = normalizeProfile(body);
+        const profiles = readProfiles();
+        profiles[profile.steamId] = profile;
+        writeProfiles(profiles);
+        sendJson(res, 200, profile);
+        return;
+      }
+
+      if (req.method === 'DELETE') {
+        const steamId = requestUrl.searchParams.get('steamId') || getSteamIdFromPath(requestUrl.pathname);
+        if (!steamId) {
+          sendJson(res, 400, { error: 'steamId is required' });
+          return;
+        }
+
+        const profiles = readProfiles();
+        delete profiles[steamId];
+        writeProfiles(profiles);
+        sendJson(res, 200, { ok: true });
+        return;
+      }
+
+      sendJson(res, 404, { error: 'Not found' });
       return;
     }
 
-    if (req.method === 'POST' && requestUrl.pathname === '/api/profile') {
-      const body = await readBody(req);
-      const profile = normalizeProfile(body);
-      const profiles = readProfiles();
-      profiles[profile.steamId] = profile;
-      writeProfiles(profiles);
-      sendJson(res, 200, profile);
-      return;
-    }
-
-    if (req.method === 'DELETE' && requestUrl.pathname.startsWith('/api/profile/')) {
-      const steamId = decodeURIComponent(requestUrl.pathname.replace('/api/profile/', ''));
-      const profiles = readProfiles();
-      delete profiles[steamId];
-      writeProfiles(profiles);
-      sendJson(res, 200, { ok: true });
+    const filePath = resolveStaticPath(requestUrl.pathname);
+    if (filePath) {
+      sendStaticFile(res, filePath);
       return;
     }
 
@@ -124,5 +221,6 @@ const server = http.createServer(async (req, res) => {
 });
 
 server.listen(port, () => {
-  console.log(`Barelands profile API listening on http://localhost:${port}`);
+  console.log(`Barelands server listening on http://localhost:${port}`);
+  console.log(`Profiles stored in ${profilesPath}`);
 });

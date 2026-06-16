@@ -30,6 +30,13 @@ function normalizeProfile(body) {
     avatarUrl: typeof body.avatarUrl === 'string' ? body.avatarUrl : '',
     customDisplayName: Boolean(body.customDisplayName),
     customAvatarUrl: Boolean(body.customAvatarUrl),
+    balance: typeof body.balance === 'number' ? body.balance : 0,
+    privilege: typeof body.privilege === 'string' ? body.privilege : 'Обычный',
+    telegram: typeof body.telegram === 'string' ? body.telegram : null,
+    discord: typeof body.discord === 'string' ? body.discord : null,
+    twitch: typeof body.twitch === 'string' ? body.twitch : null,
+    email_verified_at: body.email_verified_at || null,
+    isOnline: Boolean(body.isOnline),
     updatedAt: new Date().toISOString()
   };
 }
