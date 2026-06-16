@@ -135,20 +135,32 @@
    line-height: 1.05;
 }
 
-.cabinet__name--editable {
-   border: 1px solid transparent;
-   border-radius: 14px;
-   padding: 4px 8px;
-   margin-left: -8px;
-   cursor: text;
-   outline: none;
-   transition: border-color 0.2s ease, background 0.2s ease;
+.cabinet__nickname-field {
+   display: grid;
+   gap: 8px;
+   margin-top: 16px;
 }
 
-.cabinet__name--editable:hover,
-.cabinet__name--editable:focus {
-   border-color: rgba(255, 99, 71, 0.6);
-   background: rgba(255, 99, 71, 0.08);
+.cabinet__nickname-field span {
+   color: #a0a0a0;
+   font-size: 14px;
+}
+
+.cabinet__nickname-input {
+   width: 100%;
+   padding: 13px 15px;
+   border: 1px solid rgba(255, 255, 255, 0.12);
+   border-radius: 14px;
+   background: rgba(0, 0, 0, 0.28);
+   color: #fff;
+   font-size: 16px;
+   outline: none;
+   transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.cabinet__nickname-input:focus {
+   border-color: rgba(255, 99, 71, 0.7);
+   box-shadow: 0 0 0 4px rgba(255, 99, 71, 0.12);
 }
 
 .cabinet__name-actions {
@@ -188,13 +200,6 @@
    transform: translateY(-1px);
    background: rgba(255, 99, 71, 0.16);
    border-color: rgba(255, 99, 71, 0.5);
-}
-
-.cabinet__nickname-hint {
-   margin: -4px 0 0;
-   color: #a0a0a0;
-   font-size: 14px;
-   cursor: text;
 }
 
 .cabinet__edit-name-button {

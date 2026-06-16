@@ -2,8 +2,9 @@ import { getDefaultAvatarUrl, loadSteamProfile } from './steam-profile.js';
 import { saveProfileToServer, fetchSavedProfile } from './profile-api.js';
 
 document.addEventListener('DOMContentLoaded', () => {
-  const nameNode = document.querySelector('.cabinet__name--editable') || document.querySelector('.cabinet__name');
-  if (!nameNode) return;
+  const nameNode = document.querySelector('.cabinet__name');
+  const nicknameInput = document.querySelector('.cabinet__nickname-input');
+  if (!nameNode || !nicknameInput) return;
 
   const storageKey = 'barelandsUser';
   const maxAvatarFileSize = 2 * 1024 * 1024;
@@ -15,7 +16,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const avatarFileInput = document.querySelector('.cabinet__avatar-file-input');
   const saveNameButton = document.querySelector('.cabinet__save-name-button');
   const syncSteamButton = document.querySelector('.cabinet__steam-sync-button');
-  const nicknameHint = document.querySelector('.cabinet__nickname-hint');
   const onlineStatus = document.querySelector('.cabinet__online-status');
   const privilegeValue = document.querySelector('.cabinet__privilege-value');
   const editMessage = document.querySelector('.cabinet__edit-message');
@@ -64,6 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const initials = makeInitials(displayName);
 
     if (nameNode) nameNode.textContent = displayName;
+    if (nicknameInput) nicknameInput.value = displayName;
     if (steamIdNode) steamIdNode.textContent = user.steamId || 'Не задан';
     if (avatarFallback) avatarFallback.textContent = initials;
     if (privilegeValue) privilegeValue.textContent = user.privilege || 'Обычный';
@@ -189,13 +190,16 @@ document.addEventListener('DOMContentLoaded', () => {
   const saveName = async () => {
     if (!nameNode) return;
 
-    const displayName = nameNode.textContent.replace(/\s+/g, ' ').trim().slice(0, 32);
+    const displayName = nicknameInput.value.replace(/\s+/g, ' ').trim().slice(0, 32);
 
     if (!displayName) {
-      nameNode.textContent = currentUser.displayName || 'Игрок';
-      showMessage('Введите имя профиля.', 'error');
+      nicknameInput.value = currentUser.displayName || 'Игрок';
+      nameNode.textContent = nicknameInput.value;
+      showMessage('Введите никнейм профиля.', 'error');
       return;
     }
+
+    nameNode.textContent = displayName;
 
     currentUser = {
       ...currentUser,
@@ -275,6 +279,7 @@ document.addEventListener('DOMContentLoaded', () => {
       await saveToServer(currentUser);
       updateProfileView(currentUser);
       applyAvatar(currentUser.avatarUrl || getDefaultAvatarUrl(currentUser.steamId));
+      nicknameInput.value = normalizeDisplayName(currentUser);
       showMessage('Данные Steam обновлены.', 'success');
     } catch (error) {
       console.error('Не удалось обновить данные Steam:', error);
@@ -329,23 +334,23 @@ document.addEventListener('DOMContentLoaded', () => {
   syncSteamButton?.addEventListener('click', syncFromSteam);
   logoutButton?.addEventListener('click', handleLogout);
 
-  nameNode.addEventListener('keydown', (event) => {
+  nicknameInput.addEventListener('input', () => {
+    nameNode.textContent = nicknameInput.value.trim() || currentUser.displayName || 'Игрок';
+  });
+
+  nicknameInput.addEventListener('keydown', (event) => {
     if (event.key === 'Enter') {
       event.preventDefault();
       saveName();
-      nameNode.blur();
+      nicknameInput.blur();
     }
 
     if (event.key === 'Escape') {
       event.preventDefault();
       updateProfileView(currentUser);
-      nameNode.blur();
+      nicknameInput.blur();
     }
   });
-
-  if (nicknameHint) {
-    nicknameHint.addEventListener('click', () => nameNode.focus());
-  }
 
   updateProfileView(currentUser);
   applyAvatar(currentUser.avatarUrl || (currentUser.steamId ? getDefaultAvatarUrl(currentUser.steamId) : null));
