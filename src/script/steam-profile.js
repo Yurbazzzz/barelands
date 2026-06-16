@@ -59,7 +59,7 @@ function normalizeProfileName(name) {
 function parseJinaMarkdown(markdown) {
   const titleMatch = markdown.match(/^# Steam Community ::\s*(.+)$/m);
   const nicknameMatch = markdown.match(/\)\s*([^\n![]+)\s*!\[/);
-  const avatarMatches = [...markdown.matchAll(/!\[[^\]]*]\((https:\/\/avatars\.fastly\.steamstatic\.com\/[^\s)]+)\)/g)];
+  const avatarMatches = [...markdown.matchAll(/!\[[^\]]*]\((https:\/\/avatars\.(?:fastly|akamai)\.steamstatic\.com\/[^\s)]+\.(?:jpg|jpeg|png|webp))/g)];
 
   return {
     nickname: normalizeProfileName(titleMatch?.[1] || nicknameMatch?.[1]),

@@ -173,6 +173,23 @@
    background: #ff6347;
 }
 
+.cabinet__steam-sync-button {
+   padding: 10px 16px;
+   border: 1px solid rgba(255, 255, 255, 0.16);
+   border-radius: 999px;
+   background: rgba(255, 255, 255, 0.06);
+   color: #fff;
+   font-weight: 700;
+   cursor: pointer;
+   transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+}
+
+.cabinet__steam-sync-button:hover {
+   transform: translateY(-1px);
+   background: rgba(255, 99, 71, 0.16);
+   border-color: rgba(255, 99, 71, 0.5);
+}
+
 .cabinet__nickname-hint {
    margin: -4px 0 0;
    color: #a0a0a0;

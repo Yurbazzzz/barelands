@@ -14,6 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const avatarButton = document.querySelector('.cabinet__avatar-button');
   const avatarFileInput = document.querySelector('.cabinet__avatar-file-input');
   const saveNameButton = document.querySelector('.cabinet__save-name-button');
+  const syncSteamButton = document.querySelector('.cabinet__steam-sync-button');
   const nicknameHint = document.querySelector('.cabinet__nickname-hint');
   const onlineStatus = document.querySelector('.cabinet__online-status');
   const privilegeValue = document.querySelector('.cabinet__privilege-value');
@@ -247,6 +248,40 @@ document.addEventListener('DOMContentLoaded', () => {
     window.location.href = '../index.html';
   };
 
+  const syncFromSteam = async () => {
+    if (!currentUser.steamId || currentUser.steamId === '0') {
+      showMessage('Steam ID не найден. Войдите через Steam.', 'error');
+      return;
+    }
+
+    try {
+      showMessage('Обновление данных Steam...');
+      const steamUser = {
+        ...currentUser,
+        customDisplayName: false,
+        customAvatarUrl: false
+      };
+      const updatedUser = await loadSteamProfile(currentUser.steamId, steamUser);
+
+      currentUser = {
+        ...updatedUser,
+        steamId: currentUser.steamId,
+        customDisplayName: false,
+        customAvatarUrl: false,
+        lastSteamSyncAt: new Date().toISOString()
+      };
+
+      saveUserToStorage(currentUser);
+      await saveToServer(currentUser);
+      updateProfileView(currentUser);
+      applyAvatar(currentUser.avatarUrl || getDefaultAvatarUrl(currentUser.steamId));
+      showMessage('Данные Steam обновлены.', 'success');
+    } catch (error) {
+      console.error('Не удалось обновить данные Steam:', error);
+      showMessage('Не удалось обновить данные Steam. Проверьте доступность профиля Steam.', 'error');
+    }
+  };
+
   const refreshSteamProfile = () => {
     if (!currentUser.steamId || currentUser.steamId === '0') return;
     if (currentUser.customAvatarUrl && currentUser.customDisplayName) return;
@@ -291,6 +326,7 @@ document.addEventListener('DOMContentLoaded', () => {
     event.target.value = '';
   });
   saveNameButton?.addEventListener('click', saveName);
+  syncSteamButton?.addEventListener('click', syncFromSteam);
   logoutButton?.addEventListener('click', handleLogout);
 
   nameNode.addEventListener('keydown', (event) => {
