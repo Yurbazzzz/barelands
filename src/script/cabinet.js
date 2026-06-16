@@ -11,6 +11,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const avatarImg = document.querySelector('.cabinet__avatar-img');
   const avatarFallback = document.querySelector('.cabinet__avatar-fallback');
   const avatarButton = document.querySelector('.cabinet__avatar-button');
+  const onlineStatus = document.querySelector('.cabinet__online-status');
+  const privilegeValue = document.querySelector('.cabinet__privilege-value');
   const avatarFileInput = document.querySelector('.cabinet__avatar-file-input');
   const editNameButton = document.querySelector('.cabinet__edit-name-button');
   const nicknameEditor = document.querySelector('.cabinet__nickname-editor');
@@ -19,6 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const cancelNicknameButton = document.querySelector('.cabinet__cancel-button');
   const editMessage = document.querySelector('.cabinet__edit-message');
   const logoutButton = document.querySelector('.cabinet__logout-button');
+  const balanceAmount = document.querySelector('.cabinet__balance-amount');
 
   let currentUser = getUserFromStorage();
 
@@ -50,6 +53,16 @@ document.addEventListener('DOMContentLoaded', () => {
     if (nameNode) nameNode.textContent = displayName;
     if (steamIdNode) steamIdNode.textContent = user.steamId || 'Не задан';
     if (avatarFallback) avatarFallback.textContent = initials;
+    if (privilegeValue) privilegeValue.textContent = user.privilege || 'Обычный';
+    if (balanceAmount) balanceAmount.textContent = `${user.balance || 0} ₽`;
+    updateOnlineStatus(user.isOnline);
+  };
+
+  const updateOnlineStatus = (isOnline) => {
+    if (!onlineStatus) return;
+    onlineStatus.classList.toggle('cabinet__online-status--online', isOnline);
+    onlineStatus.classList.toggle('cabinet__online-status--offline', !isOnline);
+    onlineStatus.setAttribute('aria-label', isOnline ? 'В сети' : 'Не в сети');
   };
 
   const showMessage = (message, isError = false) => {
