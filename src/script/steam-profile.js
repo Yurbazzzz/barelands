@@ -105,7 +105,9 @@ async function fetchJinaProfile(steamId) {
 }
 
 function mergeProfile(user, steamId, profile) {
-  const displayName = profile?.nickname || getDefaultDisplayName(user, steamId);
+  const displayName = user?.customDisplayName && user.displayName
+    ? user.displayName
+    : profile?.nickname || getDefaultDisplayName(user, steamId);
   const effectiveAvatarUrl = user?.customAvatarUrl ? user.avatarUrl : (profile?.avatarUrl || getDefaultAvatarUrl(steamId));
   const effectiveNickname = profile?.nickname || user?.nickname;
 

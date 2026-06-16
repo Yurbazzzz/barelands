@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const storageKey = 'barelandsUser';
   const maxAvatarFileSize = 2 * 1024 * 1024;
+  const maxAvatarCanvasSize = 768;
   const steamIdNode = document.querySelector('.cabinet__steam-id');
   const avatarImg = document.querySelector('.cabinet__avatar-img');
   const avatarFallback = document.querySelector('.cabinet__avatar-fallback');
@@ -46,6 +47,13 @@ document.addEventListener('DOMContentLoaded', () => {
     return (parts[0][0] + parts[1][0]).toUpperCase();
   };
 
+  const updateOnlineStatus = (isOnline) => {
+    if (!onlineStatus) return;
+    onlineStatus.classList.toggle('cabinet__online-status--online', Boolean(isOnline));
+    onlineStatus.classList.toggle('cabinet__online-status--offline', !Boolean(isOnline));
+    onlineStatus.setAttribute('aria-label', isOnline ? 'В сети' : 'Не в сети');
+  };
+
   const updateProfileView = (user) => {
     const displayName = normalizeDisplayName(user);
     const initials = makeInitials(displayName);
@@ -58,17 +66,11 @@ document.addEventListener('DOMContentLoaded', () => {
     updateOnlineStatus(user.isOnline);
   };
 
-  const updateOnlineStatus = (isOnline) => {
-    if (!onlineStatus) return;
-    onlineStatus.classList.toggle('cabinet__online-status--online', isOnline);
-    onlineStatus.classList.toggle('cabinet__online-status--offline', !isOnline);
-    onlineStatus.setAttribute('aria-label', isOnline ? 'В сети' : 'Не в сети');
-  };
-
-  const showMessage = (message, isError = false) => {
+  const showMessage = (message, type = '') => {
     if (!editMessage) return;
-    editMessage.textContent = message;
-    editMessage.classList.toggle('cabinet__edit-message--error', isError);
+    editMessage.textContent = message || '';
+    editMessage.classList.toggle('cabinet__edit-message--error', type === 'error');
+    editMessage.classList.toggle('cabinet__edit-message--success', type === 'success');
   };
 
   const applyAvatar = (url) => {
@@ -83,6 +85,7 @@ document.addEventListener('DOMContentLoaded', () => {
     avatarImg.onerror = () => {
       avatarImg.classList.remove('loaded');
       if (avatarFallback) avatarFallback.style.opacity = '1';
+      showMessage('Не удалось загрузить фото профиля. Попробуйте другой файл.', 'error');
     };
   };
 
@@ -93,17 +96,65 @@ document.addEventListener('DOMContentLoaded', () => {
     reader.readAsDataURL(file);
   });
 
-  const saveToServer = (user) => saveProfileToServer(user).then((persistedUser) => {
-    if (persistedUser) {
-      saveUserToStorage(persistedUser);
-      currentUser = persistedUser;
+  const loadImage = (file) => new Promise((resolve, reject) => {
+    if ('createImageBitmap' in window) {
+      createImageBitmap(file).then(resolve).catch(() => {
+        const image = new Image();
+        image.onload = () => resolve(image);
+        image.onerror = () => reject(new Error('Не удалось обработать изображение'));
+        image.src = URL.createObjectURL(file);
+      });
+      return;
     }
-  }).catch((error) => {
-    console.warn('Не удалось сохранить профиль на сервере:', error.message);
+
+    const image = new Image();
+    image.onload = () => resolve(image);
+    image.onerror = () => reject(new Error('Не удалось обработать изображение'));
+    image.src = URL.createObjectURL(file);
   });
 
+  const resizeAvatarFile = async (file) => {
+    if (file.type === 'image/svg+xml' || file.type === 'image/gif') {
+      if (file.size > maxAvatarFileSize) {
+        throw new Error('Файл слишком большой');
+      }
+      return readFileAsDataUrl(file);
+    }
+
+    if (file.size <= 1024 * 1024) {
+      return readFileAsDataUrl(file);
+    }
+
+    const image = await loadImage(file);
+    const sourceWidth = image.naturalWidth || image.width;
+    const sourceHeight = image.naturalHeight || image.height;
+    const scale = Math.min(1, maxAvatarCanvasSize / Math.max(sourceWidth, sourceHeight));
+    const width = Math.round(sourceWidth * scale);
+    const height = Math.round(sourceHeight * scale);
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+
+    const context = canvas.getContext('2d');
+    context.drawImage(image, 0, 0, width, height);
+    return canvas.toDataURL('image/jpeg', 0.86);
+  };
+
+  const isImageFile = (file) => Boolean(
+    file
+    && (
+      file.type.startsWith('image/')
+      || /\.(png|jpe?g|gif|webp|svg)$/i.test(file.name || '')
+    )
+  );
+
   const saveUserToStorage = (user) => {
-    localStorage.setItem(storageKey, JSON.stringify(user));
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(user));
+    } catch (error) {
+      console.warn('Не удалось сохранить профиль в браузере:', error);
+      showMessage('Не удалось сохранить изменения в браузере. Освободите место или выберите файл меньше.', 'error');
+    }
   };
 
   const getUserFromStorage = () => {
@@ -114,25 +165,44 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
+  const saveToServer = async (user) => {
+    if (!user?.steamId) return user;
+
+    try {
+      const persistedUser = await saveProfileToServer(user);
+      if (persistedUser) {
+        saveUserToStorage(persistedUser);
+        currentUser = persistedUser;
+      }
+      return persistedUser || user;
+    } catch (error) {
+      console.warn('Не удалось сохранить профиль на сервере:', error.message);
+      return user;
+    }
+  };
+
   const showNicknameEditor = () => {
-    if (!nicknameEditorInput) return;
-    nicknameEditorInput.value = currentUser.nickname || currentUser.displayName || '';
+    if (!nicknameEditor || !nicknameEditorInput || !editNameButton) return;
+    nicknameEditorInput.value = currentUser.displayName || currentUser.nickname || '';
     nicknameEditor.hidden = false;
     editNameButton.setAttribute('aria-expanded', 'true');
-    nicknameEditorInput.focus();
+    window.setTimeout(() => nicknameEditorInput.focus(), 0);
   };
 
   const hideNicknameEditor = (clearMessage = false) => {
+    if (!nicknameEditor || !editNameButton) return;
     nicknameEditor.hidden = true;
     editNameButton.setAttribute('aria-expanded', 'false');
     if (clearMessage) showMessage('');
   };
 
-  const saveNickname = () => {
-    const displayName = nicknameEditorInput.value.trim().slice(0, 32);
+  const saveNickname = async () => {
+    if (!nicknameEditorInput) return;
+
+    const displayName = nicknameEditorInput.value.replace(/\s+/g, ' ').trim().slice(0, 32);
 
     if (!displayName) {
-      showMessage('Введите никнейм профиля.', true);
+      showMessage('Введите никнейм профиля.', 'error');
       return;
     }
 
@@ -144,55 +214,56 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     saveUserToStorage(currentUser);
-    saveToServer(currentUser);
+    await saveToServer(currentUser);
     updateProfileView(currentUser);
     hideNicknameEditor(true);
-    showMessage('Никнейм сохранён.');
+    showMessage('Никнейм сохранён.', 'success');
   };
 
   const saveAvatar = async (file) => {
     if (!file) return;
 
-    if (file.type && !file.type.startsWith('image/')) {
-      showMessage('Выберите изображение для аватара.', true);
+    if (!isImageFile(file)) {
+      showMessage('Выберите изображение для фото профиля.', 'error');
       return;
     }
 
-    if (file.size > maxAvatarFileSize) {
-      showMessage('Выберите изображение размером не больше 2 МБ.', true);
+    if (file.size > maxAvatarFileSize * 4) {
+      showMessage('Выберите изображение размером не больше 8 МБ.', 'error');
       return;
     }
 
     try {
-      const avatarUrl = await readFileAsDataUrl(file);
+      showMessage('Сохранение фото профиля...');
+      const avatarUrl = await resizeAvatarFile(file);
       currentUser = {
         ...currentUser,
         avatarUrl,
         customAvatarUrl: true
       };
+
       saveUserToStorage(currentUser);
-      await saveProfileToServer(currentUser);
+      await saveToServer(currentUser);
       applyAvatar(avatarUrl);
-      showMessage('Аватар сохранён.');
+      showMessage('Фото профиля сохранено.', 'success');
     } catch (error) {
       console.error('Не удалось сохранить аватар:', error);
-      showMessage('Не удалось сохранить аватар. Попробуйте другой файл.', true);
+      showMessage('Не удалось сохранить фото профиля. Попробуйте другой файл.', 'error');
     }
   };
 
-  const handleLogout = () => {
-    saveToServer(currentUser).then(() => {
-      localStorage.removeItem(storageKey);
-      window.location.href = '../index.html';
-    });
+  const handleLogout = async () => {
+    await saveToServer(currentUser);
+    localStorage.removeItem(storageKey);
+    window.location.href = '../index.html';
   };
 
   const refreshSteamProfile = () => {
     if (!currentUser.steamId) return;
-    if (currentUser.customAvatarUrl && currentUser.avatarUrl) return;
+    if (currentUser.customAvatarUrl && currentUser.customDisplayName) return;
 
     fetchSavedProfile(currentUser.steamId).then((savedProfile) => {
-      if (savedProfile && savedProfile.avatarUrl && savedProfile.customAvatarUrl) {
+      if (savedProfile && savedProfile.customAvatarUrl && savedProfile.avatarUrl) {
         currentUser = {
           ...currentUser,
           ...savedProfile,
