@@ -1,4 +1,5 @@
 import { saveProfileToServer, fetchSavedProfile } from './profile-api.js';
+import { getCurrentUser, saveCurrentUser } from './storage.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     const tabButtons = document.querySelectorAll('.cabinet__tab');
@@ -12,22 +13,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const linkButtons = document.querySelectorAll('.cabinet__link-button');
     const emailInput = document.querySelector('.cabinet__email-input');
     const emailSave = document.querySelector('.cabinet__email-save');
-
-    const storageKey = 'barelandsUser';
-
-    function getCurrentUser() {
-        const raw = localStorage.getItem(storageKey);
-        if (!raw) return null;
-        try {
-            return JSON.parse(raw);
-        } catch {
-            return null;
-        }
-    }
-
-    function saveCurrentUser(user) {
-        localStorage.setItem(storageKey, JSON.stringify(user));
-    }
 
     function switchTab(targetTab) {
         tabButtons.forEach(btn => btn.classList.toggle('cabinet__tab--active', btn.dataset.tab === targetTab));

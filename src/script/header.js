@@ -1,5 +1,12 @@
 import { loadSteamProfile } from './steam-profile.js';
 import { fetchSavedProfile, saveProfileToServer } from './profile-api.js';
+import {
+  getCurrentUser,
+  getRegisteredUsers,
+  removeCurrentUser,
+  saveCurrentUser,
+  saveRegisteredUsers
+} from './storage.js';
 
 document.addEventListener('DOMContentLoaded', () => {
   const burger = document.querySelector('.header__burger');
@@ -14,8 +21,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const cabinetUrl = currentPath.includes('/pages/') ? 'cabinet.html' : './pages/cabinet.html';
   const homeUrl = currentPath.includes('/pages/') ? '../index.html' : './index.html';
 
-  const storageKey = 'barelandsUser';
-  const usersKey = 'barelandsUsers';
   let authModalInitialized = false;
   const isSteamCallbackPage = currentPath.endsWith('/steam-auth.html') || currentPath.endsWith('\\steam-auth.html');
 
@@ -39,39 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function isLoggedIn() {
-    return Boolean(localStorage.getItem(storageKey));
-  }
-
-  function getCurrentUser() {
-    const raw = localStorage.getItem(storageKey);
-    if (!raw) return null;
-    try {
-      return JSON.parse(raw);
-    } catch {
-      return null;
-    }
-  }
-
-  function saveCurrentUser(user) {
-    localStorage.setItem(storageKey, JSON.stringify(user));
-  }
-
-  function removeCurrentUser() {
-    localStorage.removeItem(storageKey);
-  }
-
-  function getRegisteredUsers() {
-    const raw = localStorage.getItem(usersKey);
-    if (!raw) return {};
-    try {
-      return JSON.parse(raw);
-    } catch {
-      return {};
-    }
-  }
-
-  function saveRegisteredUsers(users) {
-    localStorage.setItem(usersKey, JSON.stringify(users));
+    return Boolean(getCurrentUser());
   }
 
   function redirectToCabinet() {

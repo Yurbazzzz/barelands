@@ -1,4 +1,5 @@
 import './styles/style.scss';
+import './script/local-storage-reset.js';
 import './script/server-info.js';
 import './script/shop.js';
 import './script/shop-images.js';

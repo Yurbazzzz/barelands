@@ -1,8 +1,8 @@
 import { getDefaultAvatarUrl, loadSteamProfile } from './steam-profile.js';
 import { saveProfileToServer, fetchSavedProfile } from './profile-api.js';
+import { getCurrentUser, removeCurrentUser, saveCurrentUser } from './storage.js';
 
 document.addEventListener('DOMContentLoaded', () => {
-  const sessionKey = 'barelandsUser';
   const defaultSteamId = '0';
   const maxAvatarFileSize = 2 * 1024 * 1024;
   const maxAvatarCanvasSize = 768;
@@ -35,22 +35,6 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   let currentUser = createDefaultUser();
-
-  const getSessionUser = () => {
-    try {
-      return JSON.parse(localStorage.getItem(sessionKey) || 'null');
-    } catch {
-      return null;
-    }
-  };
-
-  const saveSessionUser = (user) => {
-    try {
-      localStorage.setItem(sessionKey, JSON.stringify(user));
-    } catch (error) {
-      console.warn('Не удалось сохранить Steam ID в сессии:', error);
-    }
-  };
 
   const normalizeDisplayName = (user) => {
     if (!user) return 'Игрок';
@@ -224,7 +208,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }, normalizedUser.steamId);
 
     renderProfile(currentUser);
-    saveSessionUser(currentUser);
+    saveCurrentUser(currentUser);
     showMessage(successMessage, 'success');
   };
 
@@ -291,12 +275,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (currentUser.steamId && currentUser.steamId !== defaultSteamId) {
       await saveProfileToServer(currentUser);
     }
-    localStorage.removeItem(sessionKey);
+    removeCurrentUser();
     window.location.href = '../index.html';
   };
 
   const loadProfileFromServer = async () => {
-    const sessionUser = getSessionUser();
+    const sessionUser = getCurrentUser();
     const steamId = String(sessionUser?.steamId || defaultSteamId);
 
     currentUser = normalizeServerProfile(sessionUser || createDefaultUser(steamId), steamId);
@@ -323,7 +307,7 @@ document.addEventListener('DOMContentLoaded', () => {
         await saveProfileToServer(currentUser);
       }
 
-      saveSessionUser(currentUser);
+      saveCurrentUser(currentUser);
       renderProfile(currentUser);
       applyAvatar(currentUser.avatarUrl || getDefaultAvatarUrl(currentUser.steamId));
       showMessage('Профиль загружен из серверного JSON.', 'success');
