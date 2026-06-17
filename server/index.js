@@ -24,10 +24,48 @@ const mimeTypes = {
   '.woff2': 'font/woff2'
 };
 
+function normalizeStoredProfile(profile) {
+  if (!profile || typeof profile !== 'object') return null;
+
+  const steamId = String(profile.steamId || '').trim();
+  if (!/^\d+$/.test(steamId)) return null;
+
+  return {
+    steamId,
+    email: typeof profile.email === 'string' ? profile.email : '',
+    displayName: typeof profile.displayName === 'string' ? profile.displayName : `steam_${steamId.slice(-6)}`,
+    nickname: typeof profile.nickname === 'string' ? profile.nickname : '',
+    avatarUrl: typeof profile.avatarUrl === 'string' ? profile.avatarUrl : '',
+    customDisplayName: Boolean(profile.customDisplayName),
+    customAvatarUrl: Boolean(profile.customAvatarUrl),
+    balance: typeof profile.balance === 'number' ? profile.balance : 0,
+    privilege: typeof profile.privilege === 'string' ? profile.privilege : 'Обычный',
+    telegram: typeof profile.telegram === 'string' ? profile.telegram : null,
+    discord: typeof profile.discord === 'string' ? profile.discord : null,
+    twitch: typeof profile.twitch === 'string' ? profile.twitch : null,
+    email_verified_at: profile.email_verified_at || null,
+    isOnline: Boolean(profile.isOnline),
+    createdAt: typeof profile.createdAt === 'string' ? profile.createdAt : new Date().toISOString(),
+    updatedAt: typeof profile.updatedAt === 'string' ? profile.updatedAt : new Date().toISOString()
+  };
+}
+
+function normalizeProfiles(value) {
+  if (Array.isArray(value)) {
+    return value.map(normalizeStoredProfile).filter(Boolean);
+  }
+
+  if (value && typeof value === 'object') {
+    return Object.values(value).map(normalizeStoredProfile).filter(Boolean);
+  }
+
+  return [];
+}
+
 function ensureProfilesFile() {
   fs.mkdirSync(path.dirname(profilesPath), { recursive: true });
   if (!fs.existsSync(profilesPath)) {
-    fs.writeFileSync(profilesPath, '{}');
+    fs.writeFileSync(profilesPath, '[]');
   }
 }
 
@@ -35,9 +73,9 @@ function readProfiles() {
   ensureProfilesFile();
 
   try {
-    return JSON.parse(fs.readFileSync(profilesPath, 'utf8'));
+    return normalizeProfiles(JSON.parse(fs.readFileSync(profilesPath, 'utf8')));
   } catch {
-    return {};
+    return [];
   }
 }
 
@@ -79,7 +117,7 @@ function readBody(req) {
   });
 }
 
-function normalizeProfile(body) {
+function normalizeProfile(body, existing = {}) {
   const steamId = String(body.steamId || '').trim();
   if (!/^\d+$/.test(steamId)) {
     const error = new Error('steamId is required');
@@ -102,8 +140,13 @@ function normalizeProfile(body) {
     twitch: typeof body.twitch === 'string' ? body.twitch : null,
     email_verified_at: body.email_verified_at || null,
     isOnline: Boolean(body.isOnline),
+    createdAt: typeof existing.createdAt === 'string' ? existing.createdAt : new Date().toISOString(),
     updatedAt: new Date().toISOString()
   };
+}
+
+function findProfile(profiles, steamId) {
+  return profiles.find((profile) => profile.steamId === steamId) || null;
 }
 
 function getSteamIdFromPath(pathname) {
@@ -168,6 +211,8 @@ const server = http.createServer(async (req, res) => {
 
   try {
     if (requestUrl.pathname.startsWith(profileApiPrefix)) {
+      const profiles = readProfiles();
+
       if (req.method === 'GET') {
         const steamId = requestUrl.searchParams.get('steamId') || getSteamIdFromPath(requestUrl.pathname);
         if (!steamId) {
@@ -175,17 +220,17 @@ const server = http.createServer(async (req, res) => {
           return;
         }
 
-        const profiles = readProfiles();
-        sendJson(res, 200, profiles[steamId] || null);
+        sendJson(res, 200, findProfile(profiles, steamId));
         return;
       }
 
       if (req.method === 'POST' && requestUrl.pathname === profileApiPrefix) {
         const body = await readBody(req);
-        const profile = normalizeProfile(body);
-        const profiles = readProfiles();
-        profiles[profile.steamId] = profile;
-        writeProfiles(profiles);
+        const existing = findProfile(profiles, String(body.steamId || ''));
+        const profile = normalizeProfile(body, existing);
+        const nextProfiles = profiles.filter((item) => item.steamId !== profile.steamId);
+        nextProfiles.push(profile);
+        writeProfiles(nextProfiles);
         sendJson(res, 200, profile);
         return;
       }
@@ -197,9 +242,7 @@ const server = http.createServer(async (req, res) => {
           return;
         }
 
-        const profiles = readProfiles();
-        delete profiles[steamId];
-        writeProfiles(profiles);
+        writeProfiles(profiles.filter((profile) => profile.steamId !== steamId));
         sendJson(res, 200, { ok: true });
         return;
       }

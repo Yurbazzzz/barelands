@@ -1,5 +1,5 @@
-{
-  "76561198451305976": {
+[
+  {
     "steamId": "76561198451305976",
     "email": "steam_76561198451305976@barelands.local",
     "displayName": "77",
@@ -14,6 +14,7 @@
     "twitch": null,
     "email_verified_at": null,
     "isOnline": false,
+    "createdAt": "2026-06-16T13:39:27.875Z",
     "updatedAt": "2026-06-16T13:39:27.875Z"
   }
-}
+]

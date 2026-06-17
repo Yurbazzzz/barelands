@@ -2,13 +2,13 @@ import { getDefaultAvatarUrl, loadSteamProfile } from './steam-profile.js';
 import { saveProfileToServer, fetchSavedProfile } from './profile-api.js';
 
 document.addEventListener('DOMContentLoaded', () => {
-  const nameNode = document.querySelector('.cabinet__name');
-  const nicknameInput = document.querySelector('.cabinet__nickname-input');
-  if (!nameNode || !nicknameInput) return;
-
-  const storageKey = 'barelandsUser';
+  const sessionKey = 'barelandsUser';
+  const defaultSteamId = '0';
   const maxAvatarFileSize = 2 * 1024 * 1024;
   const maxAvatarCanvasSize = 768;
+
+  const nameNode = document.querySelector('.cabinet__name');
+  const nicknameInput = document.querySelector('.cabinet__nickname-input');
   const steamIdNode = document.querySelector('.cabinet__steam-id');
   const avatarImg = document.querySelector('.cabinet__avatar-img');
   const avatarFallback = document.querySelector('.cabinet__avatar-fallback');
@@ -22,26 +22,43 @@ document.addEventListener('DOMContentLoaded', () => {
   const logoutButton = document.querySelector('.cabinet__logout-button');
   const balanceAmount = document.querySelector('.cabinet__balance-amount');
 
-  const createDefaultUser = () => ({
-    steamId: '0',
-    displayName: 'Игрок',
+  const createDefaultUser = (steamId = defaultSteamId) => ({
+    steamId,
+    email: '',
+    displayName: steamId && steamId !== defaultSteamId ? `steam_${steamId.slice(-6)}` : 'Игрок',
     nickname: '',
     avatarUrl: '',
-    customDisplayName: true,
+    customDisplayName: false,
     customAvatarUrl: false,
     balance: 0,
     privilege: 'Обычный',
     isOnline: false
   });
 
-  let currentUser = getUserFromStorage() || createDefaultUser();
+  let currentUser = createDefaultUser();
+
+  const getSessionUser = () => {
+    try {
+      return JSON.parse(localStorage.getItem(sessionKey) || 'null');
+    } catch {
+      return null;
+    }
+  };
+
+  const saveSessionUser = (user) => {
+    try {
+      localStorage.setItem(sessionKey, JSON.stringify(user));
+    } catch (error) {
+      console.warn('Не удалось сохранить Steam ID в сессии:', error);
+    }
+  };
 
   const normalizeDisplayName = (user) => {
     if (!user) return 'Игрок';
     if (user.displayName) return user.displayName;
     if (user.nickname) return user.nickname;
     if (user.email) return user.email.split('@')[0];
-    if (user.steamId) return `steam_${user.steamId.slice(-6)}`;
+    if (user.steamId && user.steamId !== defaultSteamId) return `steam_${user.steamId.slice(-6)}`;
     return 'Игрок';
   };
 
@@ -52,6 +69,32 @@ document.addEventListener('DOMContentLoaded', () => {
     return (parts[0][0] + parts[1][0]).toUpperCase();
   };
 
+  const normalizeServerProfile = (profile, fallbackSteamId = defaultSteamId) => {
+    const steamId = String(profile?.steamId || fallbackSteamId || defaultSteamId);
+    const displayName = typeof profile?.displayName === 'string' && profile.displayName.trim()
+      ? profile.displayName.trim()
+      : (steamId && steamId !== defaultSteamId ? `steam_${steamId.slice(-6)}` : 'Игрок');
+
+    return {
+      steamId,
+      email: typeof profile?.email === 'string' ? profile.email : '',
+      displayName,
+      nickname: typeof profile?.nickname === 'string' ? profile.nickname : displayName,
+      avatarUrl: typeof profile?.avatarUrl === 'string' ? profile.avatarUrl : '',
+      customDisplayName: Boolean(profile?.customDisplayName),
+      customAvatarUrl: Boolean(profile?.customAvatarUrl),
+      balance: typeof profile?.balance === 'number' ? profile.balance : 0,
+      privilege: typeof profile?.privilege === 'string' ? profile.privilege : 'Обычный',
+      telegram: typeof profile?.telegram === 'string' ? profile.telegram : null,
+      discord: typeof profile?.discord === 'string' ? profile.discord : null,
+      twitch: typeof profile?.twitch === 'string' ? profile.twitch : null,
+      email_verified_at: profile?.email_verified_at || null,
+      isOnline: Boolean(profile?.isOnline),
+      createdAt: typeof profile?.createdAt === 'string' ? profile.createdAt : new Date().toISOString(),
+      updatedAt: typeof profile?.updatedAt === 'string' ? profile.updatedAt : new Date().toISOString()
+    };
+  };
+
   const updateOnlineStatus = (isOnline) => {
     if (!onlineStatus) return;
     onlineStatus.classList.toggle('cabinet__online-status--online', Boolean(isOnline));
@@ -59,17 +102,17 @@ document.addEventListener('DOMContentLoaded', () => {
     onlineStatus.setAttribute('aria-label', isOnline ? 'В сети' : 'Не в сети');
   };
 
-  const updateProfileView = (user) => {
-    const displayName = normalizeDisplayName(user);
-    const initials = makeInitials(displayName);
+  const renderProfile = (user) => {
+    currentUser = normalizeServerProfile(user, currentUser.steamId || defaultSteamId);
+    const displayName = normalizeDisplayName(currentUser);
 
     if (nameNode) nameNode.textContent = displayName;
     if (nicknameInput) nicknameInput.value = displayName;
-    if (steamIdNode) steamIdNode.textContent = user.steamId || 'Не задан';
-    if (avatarFallback) avatarFallback.textContent = initials;
-    if (privilegeValue) privilegeValue.textContent = user.privilege || 'Обычный';
-    if (balanceAmount) balanceAmount.textContent = `${user.balance || 0} ₽`;
-    updateOnlineStatus(user.isOnline);
+    if (steamIdNode) steamIdNode.textContent = currentUser.steamId && currentUser.steamId !== defaultSteamId ? currentUser.steamId : 'Не задан';
+    if (avatarFallback) avatarFallback.textContent = makeInitials(displayName);
+    if (privilegeValue) privilegeValue.textContent = currentUser.privilege || 'Обычный';
+    if (balanceAmount) balanceAmount.textContent = `${currentUser.balance || 0} ₽`;
+    updateOnlineStatus(currentUser.isOnline);
   };
 
   const showMessage = (message, type = '') => {
@@ -80,19 +123,31 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   const applyAvatar = (url) => {
-    if (!url || !avatarImg) return;
+    if (!avatarImg) return;
+
+    if (!url) {
+      avatarImg.removeAttribute('src');
+      avatarImg.classList.remove('loaded');
+      if (avatarFallback) avatarFallback.style.opacity = '1';
+      return;
+    }
+
     avatarImg.classList.remove('loaded');
     if (avatarFallback) avatarFallback.style.opacity = '1';
-    avatarImg.src = url;
-    avatarImg.onload = () => {
+
+    const image = new Image();
+    image.onload = () => {
+      avatarImg.src = url;
       avatarImg.classList.add('loaded');
       if (avatarFallback) avatarFallback.style.opacity = '0';
     };
-    avatarImg.onerror = () => {
+    image.onerror = () => {
+      avatarImg.removeAttribute('src');
       avatarImg.classList.remove('loaded');
       if (avatarFallback) avatarFallback.style.opacity = '1';
       showMessage('Не удалось загрузить фото профиля. Попробуйте другой файл.', 'error');
     };
+    image.src = url;
   };
 
   const readFileAsDataUrl = (file) => new Promise((resolve, reject) => {
@@ -154,68 +209,48 @@ document.addEventListener('DOMContentLoaded', () => {
     )
   );
 
-  const saveUserToStorage = (user) => {
-    try {
-      localStorage.setItem(storageKey, JSON.stringify(user));
-    } catch (error) {
-      console.warn('Не удалось сохранить профиль в браузере:', error);
-      showMessage('Не удалось сохранить изменения в браузере. Выберите файл меньше.', 'error');
-    }
-  };
+  const persistProfile = async (nextUser, successMessage) => {
+    const normalizedUser = normalizeServerProfile(nextUser, currentUser.steamId || defaultSteamId);
+    const savedUser = await saveProfileToServer(normalizedUser);
 
-  const getUserFromStorage = () => {
-    try {
-      return JSON.parse(localStorage.getItem(storageKey) || 'null');
-    } catch {
-      return null;
-    }
-  };
-
-  const saveToServer = async (user) => {
-    if (!user?.steamId || user.steamId === '0') return user;
-
-    try {
-      const persistedUser = await saveProfileToServer(user);
-      if (persistedUser) {
-        saveUserToStorage(persistedUser);
-        currentUser = persistedUser;
-      }
-      return persistedUser || user;
-    } catch (error) {
-      console.warn('Не удалось сохранить профиль на сервере:', error.message);
-      return user;
-    }
+    currentUser = normalizeServerProfile(savedUser || normalizedUser, normalizedUser.steamId);
+    saveSessionUser(currentUser);
+    renderProfile(currentUser);
+    showMessage(successMessage, 'success');
   };
 
   const saveName = async () => {
     if (!nameNode) return;
 
+    if (!currentUser.steamId || currentUser.steamId === defaultSteamId) {
+      showMessage('Steam ID не найден. Войдите через Steam.', 'error');
+      return;
+    }
+
     const displayName = nicknameInput.value.replace(/\s+/g, ' ').trim().slice(0, 32);
 
     if (!displayName) {
-      nicknameInput.value = currentUser.displayName || 'Игрок';
-      nameNode.textContent = nicknameInput.value;
+      renderProfile(currentUser);
       showMessage('Введите никнейм профиля.', 'error');
       return;
     }
 
-    nameNode.textContent = displayName;
-
-    currentUser = {
+    await persistProfile({
       ...currentUser,
       displayName,
       nickname: displayName,
-      customDisplayName: true
-    };
-
-    saveUserToStorage(currentUser);
-    await saveToServer(currentUser);
-    updateProfileView(currentUser);
-    showMessage('Имя профиля сохранено.', 'success');
+      customDisplayName: true,
+      updatedAt: new Date().toISOString()
+    }, 'Имя профиля сохранено в JSON на сервере.');
   };
 
   const saveAvatar = async (file) => {
     if (!file) return;
+
+    if (!currentUser.steamId || currentUser.steamId === defaultSteamId) {
+      showMessage('Steam ID не найден. Войдите через Steam.', 'error');
+      return;
+    }
 
     if (!isImageFile(file)) {
       showMessage('Выберите изображение для фото профиля.', 'error');
@@ -230,16 +265,13 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       showMessage('Сохранение фото профиля...');
       const avatarUrl = await resizeAvatarFile(file);
-      currentUser = {
+
+      await persistProfile({
         ...currentUser,
         avatarUrl,
-        customAvatarUrl: true
-      };
-
-      saveUserToStorage(currentUser);
-      await saveToServer(currentUser);
-      applyAvatar(avatarUrl);
-      showMessage('Фото профиля сохранено.', 'success');
+        customAvatarUrl: true,
+        updatedAt: new Date().toISOString()
+      }, 'Фото профиля сохранено в JSON на сервере.');
     } catch (error) {
       console.error('Не удалось сохранить аватар:', error);
       showMessage('Не удалось сохранить фото профиля. Попробуйте другой файл.', 'error');
@@ -247,82 +279,76 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   const handleLogout = async () => {
-    await saveToServer(currentUser);
-    localStorage.removeItem(storageKey);
+    if (currentUser.steamId && currentUser.steamId !== defaultSteamId) {
+      await saveProfileToServer(currentUser);
+    }
+    localStorage.removeItem(sessionKey);
     window.location.href = '../index.html';
   };
 
   const syncFromSteam = async () => {
-    if (!currentUser.steamId || currentUser.steamId === '0') {
+    if (!currentUser.steamId || currentUser.steamId === defaultSteamId) {
       showMessage('Steam ID не найден. Войдите через Steam.', 'error');
       return;
     }
 
     try {
       showMessage('Обновление данных Steam...');
-      const steamUser = {
-        ...currentUser,
-        customDisplayName: false,
-        customAvatarUrl: false
-      };
-      const updatedUser = await loadSteamProfile(currentUser.steamId, steamUser);
+      const steamUser = await loadSteamProfile(currentUser.steamId, currentUser);
 
-      currentUser = {
-        ...updatedUser,
+      await persistProfile({
+        ...steamUser,
         steamId: currentUser.steamId,
-        customDisplayName: false,
-        customAvatarUrl: false,
-        lastSteamSyncAt: new Date().toISOString()
-      };
-
-      saveUserToStorage(currentUser);
-      await saveToServer(currentUser);
-      updateProfileView(currentUser);
-      applyAvatar(currentUser.avatarUrl || getDefaultAvatarUrl(currentUser.steamId));
-      nicknameInput.value = normalizeDisplayName(currentUser);
-      showMessage('Данные Steam обновлены.', 'success');
+        displayName: currentUser.customDisplayName ? currentUser.displayName : steamUser.displayName,
+        nickname: currentUser.customDisplayName ? currentUser.nickname : steamUser.nickname,
+        avatarUrl: currentUser.customAvatarUrl ? currentUser.avatarUrl : steamUser.avatarUrl,
+        customDisplayName: currentUser.customDisplayName,
+        customAvatarUrl: currentUser.customAvatarUrl,
+        lastSteamSyncAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      }, 'Данные Steam обновлены без перезаписи пользовательских значений.');
     } catch (error) {
       console.error('Не удалось обновить данные Steam:', error);
       showMessage('Не удалось обновить данные Steam. Проверьте доступность профиля Steam.', 'error');
     }
   };
 
-  const refreshSteamProfile = () => {
-    if (!currentUser.steamId || currentUser.steamId === '0') return;
-    if (currentUser.customAvatarUrl && currentUser.customDisplayName) return;
+  const loadProfileFromServer = async () => {
+    const sessionUser = getSessionUser();
+    const steamId = String(sessionUser?.steamId || defaultSteamId);
 
-    fetchSavedProfile(currentUser.steamId).then((savedProfile) => {
-      if (savedProfile && savedProfile.customAvatarUrl && savedProfile.avatarUrl) {
-        currentUser = {
+    currentUser = normalizeServerProfile(sessionUser || createDefaultUser(steamId), steamId);
+    renderProfile(currentUser);
+
+    if (!steamId || steamId === defaultSteamId) {
+      showMessage('Войдите через Steam, чтобы загрузить профиль.', '');
+      return;
+    }
+
+    try {
+      showMessage('Загрузка профиля из серверного JSON...');
+      const savedProfile = await fetchSavedProfile(steamId);
+
+      if (savedProfile?.steamId) {
+        currentUser = normalizeServerProfile(savedProfile, steamId);
+      } else {
+        const steamProfile = await loadSteamProfile(steamId, {
           ...currentUser,
-          ...savedProfile,
-          steamId: currentUser.steamId,
-          customDisplayName: currentUser.customDisplayName,
-          customAvatarUrl: currentUser.customAvatarUrl
-        };
-        if (currentUser.customDisplayName) {
-          currentUser.displayName = currentUser.displayName || normalizeDisplayName(savedProfile);
-          currentUser.nickname = currentUser.displayName;
-        }
-        updateProfileView(currentUser);
-        applyAvatar(currentUser.avatarUrl);
-        return;
+          customDisplayName: false,
+          customAvatarUrl: false
+        });
+        currentUser = normalizeServerProfile(steamProfile, steamId);
+        await saveProfileToServer(currentUser);
       }
 
-      return loadSteamProfile(currentUser.steamId, currentUser);
-    }).then((updatedUser) => {
-      if (!updatedUser) return;
-      currentUser = {
-        ...updatedUser,
-        steamId: currentUser.steamId
-      };
-      saveUserToStorage(currentUser);
-      saveToServer(currentUser);
-      updateProfileView(currentUser);
+      saveSessionUser(currentUser);
+      renderProfile(currentUser);
       applyAvatar(currentUser.avatarUrl || getDefaultAvatarUrl(currentUser.steamId));
-    }).catch((error) => {
-      console.warn('Не удалось обновить профиль Steam:', error);
-    });
+      showMessage('Профиль загружен из серверного JSON.', 'success');
+    } catch (error) {
+      console.warn('Не удалось загрузить профиль из серверного JSON:', error.message);
+      showMessage('Не удалось загрузить профиль из серверного JSON.', 'error');
+    }
   };
 
   avatarButton?.addEventListener('click', () => avatarFileInput?.click());
@@ -334,11 +360,12 @@ document.addEventListener('DOMContentLoaded', () => {
   syncSteamButton?.addEventListener('click', syncFromSteam);
   logoutButton?.addEventListener('click', handleLogout);
 
-  nicknameInput.addEventListener('input', () => {
-    nameNode.textContent = nicknameInput.value.trim() || currentUser.displayName || 'Игрок';
+  nicknameInput?.addEventListener('input', () => {
+    if (!nameNode) return;
+    nameNode.textContent = nicknameInput.value.trim() || normalizeDisplayName(currentUser);
   });
 
-  nicknameInput.addEventListener('keydown', (event) => {
+  nicknameInput?.addEventListener('keydown', (event) => {
     if (event.key === 'Enter') {
       event.preventDefault();
       saveName();
@@ -347,12 +374,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (event.key === 'Escape') {
       event.preventDefault();
-      updateProfileView(currentUser);
+      renderProfile(currentUser);
       nicknameInput.blur();
     }
   });
 
-  updateProfileView(currentUser);
-  applyAvatar(currentUser.avatarUrl || (currentUser.steamId ? getDefaultAvatarUrl(currentUser.steamId) : null));
-  refreshSteamProfile();
+  loadProfileFromServer();
 });
