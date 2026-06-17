@@ -197,21 +197,22 @@ document.addEventListener('DOMContentLoaded', () => {
     const steamId = steamIdMatch[1];
     const savedProfile = await fetchSavedProfile(steamId);
 
-    if (savedProfile && savedProfile.customAvatarUrl && savedProfile.avatarUrl) {
+    if (savedProfile?.steamId) {
       saveCurrentUser({
         ...savedProfile,
         steamId,
         email: savedProfile.email || `steam_${steamId}@barelands.local`,
-        displayName: savedProfile.displayName || `steam_${steamId}`
+        displayName: savedProfile.displayName || `steam_${steamId}`,
+        avatarUrl: savedProfile.avatarUrl || `https://steamcommunity.com/profiles/${steamId}/avatar/`
       });
     } else {
       const basicUser = {
-        ...savedProfile,
         steamId,
-        email: savedProfile.email || `steam_${steamId}@barelands.local`,
-        displayName: savedProfile.displayName || `steam_${steamId}`,
-        avatarUrl: savedProfile.avatarUrl || `https://steamcommunity.com/profiles/${steamId}/avatar/`,
-        customAvatarUrl: savedProfile.customAvatarUrl || false
+        email: `steam_${steamId}@barelands.local`,
+        displayName: `steam_${steamId}`,
+        avatarUrl: `https://steamcommunity.com/profiles/${steamId}/avatar/`,
+        customDisplayName: false,
+        customAvatarUrl: false
       };
 
       try {
