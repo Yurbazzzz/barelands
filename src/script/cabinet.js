@@ -211,10 +211,20 @@ document.addEventListener('DOMContentLoaded', () => {
   const persistProfile = async (nextUser, successMessage) => {
     const normalizedUser = normalizeServerProfile(nextUser, currentUser.steamId || defaultSteamId);
     const savedUser = await saveProfileToServer(normalizedUser);
+    const serverUser = normalizeServerProfile(savedUser || {}, normalizedUser.steamId);
 
-    currentUser = normalizeServerProfile(savedUser || normalizedUser, normalizedUser.steamId);
-    saveSessionUser(currentUser);
+    currentUser = normalizeServerProfile({
+      ...serverUser,
+      ...normalizedUser,
+      displayName: normalizedUser.displayName,
+      nickname: normalizedUser.nickname,
+      avatarUrl: normalizedUser.avatarUrl,
+      customDisplayName: normalizedUser.customDisplayName,
+      customAvatarUrl: normalizedUser.customAvatarUrl
+    }, normalizedUser.steamId);
+
     renderProfile(currentUser);
+    saveSessionUser(currentUser);
     showMessage(successMessage, 'success');
   };
 
