@@ -15,7 +15,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const avatarButton = document.querySelector('.cabinet__avatar-button');
   const avatarFileInput = document.querySelector('.cabinet__avatar-file-input');
   const saveNameButton = document.querySelector('.cabinet__save-name-button');
-  const syncSteamButton = document.querySelector('.cabinet__steam-sync-button');
   const onlineStatus = document.querySelector('.cabinet__online-status');
   const privilegeValue = document.querySelector('.cabinet__privilege-value');
   const editMessage = document.querySelector('.cabinet__edit-message');
@@ -286,33 +285,6 @@ document.addEventListener('DOMContentLoaded', () => {
     window.location.href = '../index.html';
   };
 
-  const syncFromSteam = async () => {
-    if (!currentUser.steamId || currentUser.steamId === defaultSteamId) {
-      showMessage('Steam ID не найден. Войдите через Steam.', 'error');
-      return;
-    }
-
-    try {
-      showMessage('Обновление данных Steam...');
-      const steamUser = await loadSteamProfile(currentUser.steamId, currentUser);
-
-      await persistProfile({
-        ...steamUser,
-        steamId: currentUser.steamId,
-        displayName: currentUser.customDisplayName ? currentUser.displayName : steamUser.displayName,
-        nickname: currentUser.customDisplayName ? currentUser.nickname : steamUser.nickname,
-        avatarUrl: currentUser.customAvatarUrl ? currentUser.avatarUrl : steamUser.avatarUrl,
-        customDisplayName: currentUser.customDisplayName,
-        customAvatarUrl: currentUser.customAvatarUrl,
-        lastSteamSyncAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      }, 'Данные Steam обновлены без перезаписи пользовательских значений.');
-    } catch (error) {
-      console.error('Не удалось обновить данные Steam:', error);
-      showMessage('Не удалось обновить данные Steam. Проверьте доступность профиля Steam.', 'error');
-    }
-  };
-
   const loadProfileFromServer = async () => {
     const sessionUser = getSessionUser();
     const steamId = String(sessionUser?.steamId || defaultSteamId);
@@ -357,7 +329,6 @@ document.addEventListener('DOMContentLoaded', () => {
     event.target.value = '';
   });
   saveNameButton?.addEventListener('click', saveName);
-  syncSteamButton?.addEventListener('click', syncFromSteam);
   logoutButton?.addEventListener('click', handleLogout);
 
   nicknameInput?.addEventListener('input', () => {
