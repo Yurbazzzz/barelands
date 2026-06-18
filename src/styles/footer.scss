@@ -15,18 +15,84 @@
 }
 
 .footer {
-    display: flex;
-    align-items: center;
-    justify-content: space-around;
-    color: white;
+     display: flex;
+     align-items: center;
+     justify-content: space-around;
+     color: white;
+     background-color:#27272a;
+     border-radius: 20px;
+     border-style: solid;
+     border-color:#ff6347;
+     border-width: 1px;
+     padding: 11px;
+     box-shadow: 0 0 10px rgba(0,0,0,0.5);
+     padding: 40px;
+ }
 
-    background-color:#27272a;
-    border-radius: 20px;
-    border-style: solid;
-    border-color:#ff6347;
-    border-width: 1px;
-    padding: 11px;
-    box-shadow: 0 0 10px rgba(0,0,0,0.5);
+ .steam-auth {
+     min-height: calc(100vh - 220px);
+     display: flex;
+     align-items: center;
+     justify-content: center;
+     padding: 64px 16px 80px;
+     background: linear-gradient(180deg, rgba(39, 39, 42, 0.4) 0%, rgba(18, 18, 20, 0.9) 100%);
+ }
 
-    padding: 40px;
-}
+ .steam-auth__panel {
+     width: 100%;
+     max-width: 500px;
+     background: #111;
+     border: 1px solid rgba(255, 99, 71, 0.12);
+     border-radius: 32px;
+     box-shadow: 0 30px 90px rgba(0, 0, 0, 0.42);
+     padding: 42px;
+     display: grid;
+     gap: 24px;
+     text-align: center;
+ }
+
+ .steam-auth__title {
+     margin: 0;
+     font-size: 28px;
+     color: #fff;
+ }
+
+ .steam-auth__status {
+     margin: 0;
+     font-size: 18px;
+     color: #a0a0a0;
+ }
+
+ .steam-auth__hint {
+     margin: 0;
+     font-size: 16px;
+     color: #ff6347;
+ }
+
+ .steam-auth__icon-wrapper {
+     display: flex;
+     justify-content: center;
+     margin-bottom: 10px;
+ }
+
+ .steam-auth__steam-icon {
+     width: 80px;
+     height: 80px;
+     display: block;
+ }
+
+ .steam-auth__retry-button {
+     padding: 14px 28px;
+     border: none;
+     border-radius: 999px;
+     background: linear-gradient(135deg, #ff6347 0%, #ff9347 100%);
+     color: #fff;
+     font-size: 16px;
+     cursor: pointer;
+     transition: transform 0.25s ease, box-shadow 0.25s ease;
+ }
+
+ .steam-auth__retry-button:hover {
+     transform: translateY(-2px);
+     box-shadow: 0 18px 40px rgba(255, 99, 71, 0.24);
+ }

@@ -74,6 +74,7 @@
         align-items: center;
         justify-content: space-between;
         gap: 14px;
+        overflow: hidden;
     }
     &__image-img {
         width: 100%;
@@ -82,6 +83,11 @@
     }
     &__image-link {
         width: 46%;
+        transition: transform 0.3s ease;
+        transform-origin: center;
+    }
+    &__image-link:hover {
+        transform: scale(1.05);
     }
 }
 
