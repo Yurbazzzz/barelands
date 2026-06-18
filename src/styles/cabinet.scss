@@ -151,14 +151,14 @@
 }
 
 .cabinet__steam-sync-button {
-    padding: 10px 16px;
-    border: 1px solid rgba(255, 255, 255, 0.16);
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.06);
-    cursor: pointer;
-    transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
-    color: white;
- }
+   padding: 10px 16px;
+   border: 1px solid rgba(255, 255, 255, 0.16);
+   border-radius: 999px;
+   background: rgba(255, 255, 255, 0.06);
+   cursor: pointer;
+   transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+   color: white;
+}
 
 .cabinet__steam-sync-button:hover {
    transform: translateY(-1px);
@@ -167,16 +167,16 @@
 }
 
 .cabinet__edit-name-button {
-    width: 40px;
-    height: 40px;
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.06);
-    cursor: pointer;
-    line-height: 1;
-    transition: transform 0.2s ease, background 0.2s ease;
-    color: white;
- }
+   width: 40px;
+   height: 40px;
+   border: 1px solid rgba(255, 255, 255, 0.12);
+   border-radius: 50%;
+   background: rgba(255, 255, 255, 0.06);
+   cursor: pointer;
+   line-height: 1;
+   transition: transform 0.2s ease, background 0.2s ease;
+   color: white;
+}
 
 .cabinet__edit-name-button:hover {
    transform: translateY(-2px);
@@ -277,9 +277,9 @@
 
 .cabinet__tab-panel--active {
    display: block;
- }
+}
 
- @media (max-width: 768px) {
+@media (max-width: 768px) {
 
 }
 
@@ -300,6 +300,7 @@
    border-radius: 14px;
    cursor: pointer;
    transition: transform 0.2s ease, box-shadow 0.2s ease;
+   color: white;
 }
 
 .cabinet__balance-topup:hover {
@@ -335,6 +336,7 @@
    border-radius: 14px;
    cursor: pointer;
    transition: background 0.2s ease;
+   color: white;
 }
 
 .cabinet__promo-activate:hover {
@@ -352,6 +354,7 @@
    border-radius: 14px;
    cursor: pointer;
    transition: transform 0.2s ease, box-shadow 0.2s ease;
+   color: white;
 }
 
 .cabinet__link-button--telegram {
