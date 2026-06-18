@@ -2,7 +2,7 @@
   "name": "barelands",
   "version": "1.0.0",
   "description": "Webpack project with SCSS and live server",
-  "main": "index.js",
+  "main": "server/index.js",
   "scripts": {
     "dev": "webpack serve --mode development",
     "build": "webpack --mode production",

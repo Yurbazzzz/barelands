@@ -3,11 +3,28 @@ const path = require('path');
 
 const profilesPath = path.join(__dirname, '..', 'profiles.json');
 
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'Content-Type',
+  'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS'
+};
+
+function sendJson(statusCode, data) {
+  return {
+    statusCode,
+    headers: {
+      ...corsHeaders,
+      'Content-Type': 'application/json; charset=utf-8'
+    },
+    body: JSON.stringify(data)
+  };
+}
+
 function normalizeStoredProfile(profile) {
   if (!profile || typeof profile !== 'object') return null;
 
   const steamId = String(profile.steamId || '').trim();
-  if (!/^\d+$/.test(steamId)) return null;
+  if (!steamId || !/^\d+$/.test(steamId)) return null;
 
   return {
     steamId,
@@ -58,10 +75,12 @@ function findProfile(profiles, steamId) {
   return profiles.find((profile) => profile.steamId === steamId) || null;
 }
 
-function normalizeProfile(body, existing = {}) {
-  const steamId = String(body.steamId || '').trim();
-  if (!/^\d+$/.test(steamId)) {
-    return { error: 'steamId is required', statusCode: 400 };
+function normalizeProfile(body) {
+  const steamId = String(body?.steamId || '').trim();
+  if (!steamId || !/^\d+$/.test(steamId)) {
+    const error = new Error('steamId is required');
+    error.statusCode = 400;
+    throw error;
   }
 
   return {
@@ -79,61 +98,63 @@ function normalizeProfile(body, existing = {}) {
     twitch: typeof body.twitch === 'string' ? body.twitch : null,
     email_verified_at: body.email_verified_at || null,
     isOnline: Boolean(body.isOnline),
-    createdAt: typeof existing.createdAt === 'string' ? existing.createdAt : new Date().toISOString(),
     updatedAt: new Date().toISOString()
   };
 }
 
-module.exports = async function handler(req, res) {
-  const method = req.method;
+module.exports = async function handler(event) {
+  const method = event.httpMethod;
+  const query = event.queryStringParameters || {};
 
   if (method === 'OPTIONS') {
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-    res.status(204).end();
-    return;
+    return {
+      statusCode: 204,
+      headers: corsHeaders,
+      body: ''
+    };
   }
-
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
   try {
     const profiles = readProfiles();
 
     if (method === 'GET') {
-      const steamId = req.query.steamId;
+      const steamId = query.steamId;
       if (!steamId) {
-        return res.status(400).json({ error: 'steamId is required' });
+        return sendJson(400, { error: 'steamId is required' });
       }
-      return res.status(200).json(findProfile(profiles, steamId));
+      return sendJson(200, findProfile(profiles, steamId));
     }
 
     if (method === 'POST') {
-      const body = req.body;
-      const existing = findProfile(profiles, String(body.steamId || ''));
-      const profile = normalizeProfile(body, existing);
-      if (profile.error) {
-        return res.status(profile.statusCode).json({ error: profile.error });
+      let body = {};
+      try {
+        body = event.isBase64Encoded
+          ? JSON.parse(Buffer.from(event.body, 'base64').toString('utf8'))
+          : JSON.parse(event.body || '{}');
+      } catch {
+        return sendJson(400, { error: 'Invalid JSON body' });
       }
+
+      const profile = normalizeProfile(body);
       const nextProfiles = profiles.filter((item) => item.steamId !== profile.steamId);
       nextProfiles.push(profile);
       writeProfiles(nextProfiles);
-      return res.status(200).json(profile);
+      return sendJson(200, profile);
     }
 
     if (method === 'DELETE') {
-      const steamId = req.query.steamId;
+      const steamId = query.steamId;
       if (!steamId) {
-        return res.status(400).json({ error: 'steamId is required' });
+        return sendJson(400, { error: 'steamId is required' });
       }
+
       writeProfiles(profiles.filter((profile) => profile.steamId !== steamId));
-      return res.status(200).json({ ok: true });
+      return sendJson(200, { ok: true });
     }
 
-    return res.status(404).json({ error: 'Not found' });
+    return sendJson(404, { error: 'Not found' });
   } catch (error) {
-    return res.status(500).json({ error: error.message || 'Internal server error' });
+    console.error('[profile] handler error:', error);
+    return sendJson(error.statusCode || 500, { error: error.message || 'Internal server error' });
   }
 };
