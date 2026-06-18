@@ -8,15 +8,15 @@
 }
 
 .cabinet__panel {
-    width: 100%;
-    max-width: 700px;
-    background: #111;
+   width: 100%;
+   background: #111;
    border: 1px solid rgba(255, 99, 71, 0.12);
    border-radius: 32px;
    box-shadow: 0 30px 90px rgba(0, 0, 0, 0.42);
-   padding: 42px;
+   padding: 5% 3%;
    display: grid;
    gap: 32px;
+   color: white;
 }
 
 .cabinet__header {
@@ -121,6 +121,7 @@
    background: rgba(0, 0, 0, 0.28);
    outline: none;
    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+   color: white;
 }
 
 .cabinet__nickname-input:focus {
@@ -141,6 +142,7 @@
    background: rgba(255, 99, 71, 0.9);
    cursor: pointer;
    transition: transform 0.2s ease, background 0.2s ease;
+   color: white;
 }
 
 .cabinet__save-name-button:hover {
@@ -236,6 +238,7 @@
    background: linear-gradient(135deg, #ff6347 0%, #ff9347 100%);
    cursor: pointer;
    transition: transform 0.25s ease, box-shadow 0.25s ease;
+   color: white;
 }
 
 .cabinet__logout-button:hover {
@@ -257,6 +260,7 @@
    border-radius: 14px;
    cursor: pointer;
    transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+   color: white;
 }
 
 .cabinet__tab--active {
@@ -377,6 +381,7 @@
    border: 1px solid rgba(255, 255, 255, 0.12);
    border-radius: 14px;
    background: rgba(0, 0, 0, 0.28);
+   color: white;
 }
 
 .cabinet__email-save {
@@ -385,6 +390,7 @@
    border: none;
    border-radius: 14px;
    cursor: pointer;
+   color: white;
 }
 
 .cabinet__stats {
@@ -398,6 +404,7 @@
    border-radius: 14px;
    background: rgba(0, 0, 0, 0.28);
    width: fit-content;
+   color: white;
 }
 
 .cabinet__stats-data {
