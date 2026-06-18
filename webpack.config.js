@@ -102,12 +102,12 @@ module.exports = {
   
   plugins: [
     new HtmlWebpackPlugin({
-      template: './src/index.html',
-      filename: 'index.html',
-      minify: {
-        removeComments: !isDev,
-        collapseWhitespace: !isDev
-      }
+  template: './src/index.html',
+  filename: 'index.html',
+  minify: {
+    removeComments: !isDev,
+    collapseWhitespace: !isDev
+  },
     }),
     ...pagePlugins,
     new MiniCssExtractPlugin({

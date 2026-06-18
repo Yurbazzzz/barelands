@@ -1,4 +1,4 @@
-import { getDefaultAvatarUrl, loadSteamProfile } from './steam-profile.js';
+﻿import { loadSteamProfile } from './steam-profile.js';
 import { fetchSavedProfile, saveProfileToServer } from './profile-api.js';
 import {
   getCurrentUser,
@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const header = document.querySelector('.header');
   const nav = document.querySelector('.header__nav');
   const closeButton = document.querySelector('.header__nav-close');
-  const loginBtn = document.querySelector('.header__auth-button');
+  const loginBtn = document.querySelector('.login-btn');
   const cabinetLogoutBtn = document.querySelector('.cabinet__logout-button');
 
   const currentPath = window.location.pathname;
@@ -195,23 +195,22 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const steamId = steamIdMatch[1];
-    const cachedUser = getCurrentUser();
-    const savedProfile = cachedUser?.steamId === steamId ? cachedUser : await fetchSavedProfile(steamId);
+    const savedProfile = await fetchSavedProfile(steamId);
 
-    saveCurrentUser({
-      ...savedProfile,
-      steamId,
-      email: savedProfile.email || `steam_${steamId}@barelands.local`,
-      displayName: savedProfile.displayName || `steam_${steamId}`,
-      avatarUrl: savedProfile.avatarUrl || getDefaultAvatarUrl(steamId)
-    });
-
-    if (!savedProfile?.steamId) {
+    if (savedProfile?.steamId) {
+      saveCurrentUser({
+        ...savedProfile,
+        steamId,
+        email: savedProfile.email || `steam_${steamId}@barelands.local`,
+        displayName: savedProfile.displayName || `steam_${steamId}`,
+        avatarUrl: savedProfile.avatarUrl || `https://steamcommunity.com/profiles/${steamId}/avatar/`
+      });
+    } else {
       const basicUser = {
         steamId,
         email: `steam_${steamId}@barelands.local`,
         displayName: `steam_${steamId}`,
-        avatarUrl: getDefaultAvatarUrl(steamId),
+        avatarUrl: `https://steamcommunity.com/profiles/${steamId}/avatar/`,
         customDisplayName: false,
         customAvatarUrl: false
       };
@@ -231,7 +230,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => redirectToCabinet(), 1200);
   }
 
-  function initAuthState() {
+function initAuthState() {
     if (isSteamCallbackPage) {
       handleSteamCallbackPage();
     }
@@ -248,36 +247,9 @@ document.addEventListener('DOMContentLoaded', () => {
     setupAuthModalEvents();
   }
 
-  function renderLoginButton() {
-    if (!loginBtn) return;
-
-    const user = getCurrentUser();
-    if (!user) {
-      loginBtn.innerHTML = '<span class="header__auth-content"><svg xmlns="http://www.w3.org/2000/svg" class="login-btn__icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.761 0 5-2.239 5-5s-2.239-5-5-5-5 2.239-5 5 2.239 5 5 5z"/><path d="M4 20c0-4.418 3.582-8 8-8s8 3.582 8 8H4z"/></svg><span class="login-btn__label">Войти</span></span>';
-      loginBtn.classList.remove('header__profile-button');
-      loginBtn.classList.add('login-btn');
-      return;
-    }
-
-    const displayName = getProfileDisplayName(user);
-    const initials = getProfileInitials(user);
-    const avatarUrl = user.avatarUrl || getDefaultAvatarUrl(user.steamId);
-    const balance = typeof user.balance === 'number' ? `${user.balance} ₽` : '0 ₽';
-
-    loginBtn.classList.remove('login-btn');
-    loginBtn.classList.add('header__profile-button');
-    loginBtn.innerHTML = [
-      avatarUrl ? `<img src="${avatarUrl}" alt="" class="header__profile-avatar" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">` : '',
-      `<span class="header__profile-initials" style="display:${avatarUrl ? 'none' : 'flex'}">${initials}</span>`,
-      `<span class="header__profile-info"><span class="header__profile-name">${displayName}</span><span class="header__profile-balance">${balance}</span></span>`
-    ].join('');
-  }
-
   function setupLoginButton() {
     if (!loginBtn) return;
-    renderLoginButton();
     loginBtn.addEventListener('click', () => {
-      renderLoginButton();
       if (isLoggedIn()) {
         redirectToCabinet();
         return;
