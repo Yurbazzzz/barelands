@@ -24,6 +24,7 @@ function getSteamId(path, query) {
   if (fromQuery) return decodeURIComponent(fromQuery);
 
   const prefix = '/.netlify/functions/profile/';
+  if (!path || typeof path !== 'string') return null;
   if (!path.startsWith(prefix)) return null;
 
   const steamId = path.slice(prefix.length);
@@ -32,7 +33,7 @@ function getSteamId(path, query) {
 
 function normalizeProfile(body) {
   const steamId = String(body?.steamId || '').trim();
-  if (!/^\d+$/.test(steamId)) {
+  if (!steamId || !/^\d+$/.test(steamId)) {
     const error = new Error('steamId is required');
     error.statusCode = 400;
     throw error;
@@ -57,6 +58,21 @@ function normalizeProfile(body) {
   };
 }
 
+let store = null;
+
+async function getBlobStore() {
+  if (store) return store;
+
+  try {
+    store = getStore(storeName, { consistency: 'strong' });
+    return store;
+  } catch (error) {
+    console.error('[profile] getStore failed:', error.message);
+    store = null;
+    return null;
+  }
+}
+
 exports.handler = async (event) => {
   const method = event.httpMethod;
   const query = event.queryStringParameters || {};
@@ -70,7 +86,10 @@ exports.handler = async (event) => {
   }
 
   try {
-    const store = getStore(storeName, { consistency: 'strong' });
+    const storeInstance = await getBlobStore();
+    if (!storeInstance) {
+      return sendJson(503, { error: 'Storage unavailable' });
+    }
 
     if (method === 'GET') {
       const steamId = getSteamId(event.path, query);
@@ -78,17 +97,35 @@ exports.handler = async (event) => {
         return sendJson(400, { error: 'steamId is required' });
       }
 
-      const profile = await store.getJSON(steamId);
+      let profile = null;
+      try {
+        profile = await storeInstance.getJSON(steamId);
+      } catch (error) {
+        console.error('[profile] getJSON failed:', error.message);
+        profile = null;
+      }
+
       return sendJson(200, profile || null);
     }
 
     if (method === 'POST') {
-      const body = event.isBase64Encoded
-        ? JSON.parse(Buffer.from(event.body, 'base64').toString('utf8'))
-        : JSON.parse(event.body || '{}');
+      let body = {};
+      try {
+        body = event.isBase64Encoded
+          ? JSON.parse(Buffer.from(event.body, 'base64').toString('utf8'))
+          : JSON.parse(event.body || '{}');
+      } catch (error) {
+        return sendJson(400, { error: 'Invalid JSON body' });
+      }
 
       const profile = normalizeProfile(body);
-      await store.setJSON(profile.steamId, profile);
+      try {
+        await storeInstance.setJSON(profile.steamId, profile);
+      } catch (error) {
+        console.error('[profile] setJSON failed:', error.message);
+        return sendJson(500, { error: 'Failed to save profile' });
+      }
+
       return sendJson(200, profile);
     }
 
@@ -98,12 +135,19 @@ exports.handler = async (event) => {
         return sendJson(400, { error: 'steamId is required' });
       }
 
-      await store.delete(steamId);
+      try {
+        await storeInstance.delete(steamId);
+      } catch (error) {
+        console.error('[profile] delete failed:', error.message);
+        return sendJson(500, { error: 'Failed to delete profile' });
+      }
+
       return sendJson(200, { ok: true });
     }
 
     return sendJson(404, { error: 'Not found' });
   } catch (error) {
+    console.error('[profile] handler error:', error);
     return sendJson(error.statusCode || 500, { error: error.message || 'Internal server error' });
   }
 };

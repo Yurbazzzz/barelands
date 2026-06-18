@@ -4,7 +4,9 @@ export async function fetchSavedProfile(steamId) {
   if (!steamId) return {};
 
   try {
-    const response = await fetch(`${profileApiUrl}/${encodeURIComponent(steamId)}`);
+    const url = new URL(profileApiUrl, window.location.origin);
+    url.searchParams.set('steamId', steamId);
+    const response = await fetch(url.toString());
     if (!response.ok) return {};
     const profile = await response.json();
     return profile || {};
@@ -39,7 +41,8 @@ export async function deleteProfileFromServer(steamId) {
   if (!steamId) return;
 
   try {
-    await fetch(`${profileApiUrl}/${encodeURIComponent(steamId)}`, { method: 'DELETE' });
+    const url = new URL(`${profileApiUrl}/${encodeURIComponent(steamId)}`, window.location.origin);
+    await fetch(url.toString(), { method: 'DELETE' });
   } catch (error) {
     console.warn('Не удалось удалить профиль с сервера:', error.message);
   }
