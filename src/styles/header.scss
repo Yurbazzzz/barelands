@@ -19,6 +19,10 @@
         display: flex;
         align-items: center;
         gap: 12px;
+
+        &:hover &-title {
+            color: #ff6347;
+        }
     }
 
     &__logo {
@@ -29,6 +33,11 @@
             font-weight: bold;
             white-space: nowrap;
             font-size: 20px;
+            transition: color 0.3s;
+
+            &:hover {
+                color: #ff6347;
+            }
         }
     }
 

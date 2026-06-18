@@ -49,28 +49,26 @@
                 </div>
 
                 <div class="servers__list">
-                    <button class="server-card">
+                    <button class="server-card server-card--bg1">
                         <h2 class="server-card__name">Сервер 1</h2>
                         <p class="server-card__status">Статус: <span class="status-green"></span></p>
                         <p class="server-card__players">Игроков онлайн: 120/500</p>
                     </button>
 
-                    <button class="server-card">
+                    <button class="server-card server-card--bg2 server-card--dev">
                         <h2 class="server-card__name">Сервер 2</h2>
-                        <p class="server-card__status">Статус: <span class="status-red"></span></p>
-                        <p class="server-card__players">Игроков онлайн: 0/500</p>
+                        <span class="server-card__dev-label">В разработке</span>
                     </button>
 
-                    <button class="server-card">
+                    <button class="server-card server-card--bg2">
                         <h2 class="server-card__name">Сервер 3</h2>
                         <p class="server-card__status">Статус: <span class="status-green"></span></p>
                         <p class="server-card__players">Игроков онлайн: 350/500</p>
                     </button>
 
-                    <button class="server-card">
+                    <button class="server-card server-card--bg2 server-card--dev">
                         <h2 class="server-card__name">Сервер 4</h2>
-                        <p class="server-card__status">Статус: <span class="status-green"></span></p>
-                        <p class="server-card__players">Игроков онлайн: 200/500</p>
+                        <span class="server-card__dev-label">В разработке</span>
                     </button>
                 </div>
 
@@ -78,14 +76,15 @@
                     <div class="server-modal__backdrop" id="server-modal-backdrop"></div>
                     <div class="server-modal__card">
                         <h2 class="server-modal__title">Информация по серверу:</h2>
-                        <div class="server-modal__body">
-                            <div class="server-modal__image"></div>
-                            <div class="server-modal__info">
-                                <p class="server-modal__name" id="modal-server-name"></p>
-                                <p class="server-modal__status" id="modal-server-status"></p>
-                                <p class="server-modal__players" id="modal-server-players"></p>
-                            </div>
-                        </div>
+<div class="server-modal__body">
+                             <div class="server-modal__image" id="modal-server-image"></div>
+                             <div class="server-modal__info">
+                                 <p class="server-modal__name" id="modal-server-name"></p>
+                                 <p class="server-modal__status" id="modal-server-status"></p>
+                                 <p class="server-modal__players" id="modal-server-players"></p>
+                                 <span class="server-modal__dev-label" id="modal-server-dev-label" hidden>В разработке</span>
+                             </div>
+                         </div>
                         <div class="server-modal__controls">
                             <button class="server-modal__close" type="button" id="close-server-modal">Закрыть</button>
                         </div>
