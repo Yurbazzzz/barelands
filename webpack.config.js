@@ -13,9 +13,9 @@ const pageFiles = fs.existsSync(pagesDir)
 const pagePlugins = pageFiles.map((file) => new HtmlWebpackPlugin({
   template: `./src/pages/${file}`,
   filename: `pages/${file}`,
-  minify: {
-    removeComments: !isDev,
-    collapseWhitespace: !isDev,
+  minify: isDev ? false : {
+    removeComments: true,
+    collapseWhitespace: true,
   },
 }));
 
@@ -104,9 +104,9 @@ module.exports = {
     new HtmlWebpackPlugin({
   template: './src/index.html',
   filename: 'index.html',
-  minify: {
-    removeComments: !isDev,
-    collapseWhitespace: !isDev
+  minify: isDev ? false : {
+    removeComments: true,
+    collapseWhitespace: true
   },
     }),
     ...pagePlugins,
