@@ -11,15 +11,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const nicknameInput = document.querySelector('.cabinet__nickname-input');
   const steamIdNode = document.querySelector('.cabinet__steam-id');
   const avatarImg = document.querySelector('.cabinet__avatar-img');
-  const avatarFallback = document.querySelector('.cabinet__avatar-fallback');
-  const avatarButton = document.querySelector('.cabinet__avatar-button');
-  const avatarFileInput = document.querySelector('.cabinet__avatar-file-input');
-  const saveNameButton = document.querySelector('.cabinet__save-name-button');
-  const onlineStatus = document.querySelector('.cabinet__online-status');
-  const privilegeValue = document.querySelector('.cabinet__privilege-value');
-  const editMessage = document.querySelector('.cabinet__edit-message');
-  const logoutButton = document.querySelector('.cabinet__logout-button');
-  const balanceAmount = document.querySelector('.cabinet__balance-amount');
+const avatarFallback = document.querySelector('.cabinet__avatar-fallback');
+   const avatarButton = document.querySelector('.cabinet__avatar-button');
+   const avatarFileInput = document.querySelector('.cabinet__avatar-file-input');
+   const saveNameButton = document.querySelector('.cabinet__save-name-button');
+   const editMessage = document.querySelector('.cabinet__edit-message');
+   const logoutButton = document.querySelector('.cabinet__logout-button');
+   const balanceAmount = document.querySelector('.cabinet__balance-amount');
 
   const createDefaultUser = (steamId = defaultSteamId) => ({
     steamId,
@@ -27,12 +25,11 @@ document.addEventListener('DOMContentLoaded', () => {
     displayName: steamId && steamId !== defaultSteamId ? `steam_${steamId.slice(-6)}` : 'Игрок',
     nickname: '',
     avatarUrl: '',
-    customDisplayName: false,
-    customAvatarUrl: false,
-    balance: 0,
-    privilege: 'Обычный',
-    isOnline: false
-  });
+customDisplayName: false,
+     customAvatarUrl: false,
+     balance: 0,
+     privilege: 'Обычный'
+   });
 
   let currentUser = createDefaultUser();
 
@@ -52,51 +49,41 @@ document.addEventListener('DOMContentLoaded', () => {
     return (parts[0][0] + parts[1][0]).toUpperCase();
   };
 
-  const normalizeServerProfile = (profile, fallbackSteamId = defaultSteamId) => {
-    const steamId = String(profile?.steamId || fallbackSteamId || defaultSteamId);
-    const displayName = typeof profile?.displayName === 'string' && profile.displayName.trim()
+const normalizeServerProfile = (profile, fallbackSteamId = defaultSteamId) => {
+     const steamId = String(profile?.steamId || fallbackSteamId || defaultSteamId);
+     const displayName = typeof profile?.displayName === 'string' && profile.displayName.trim()
       ? profile.displayName.trim()
       : (steamId && steamId !== defaultSteamId ? `steam_${steamId.slice(-6)}` : 'Игрок');
 
-    return {
-      steamId,
-      email: typeof profile?.email === 'string' ? profile.email : '',
-      displayName,
-      nickname: typeof profile?.nickname === 'string' ? profile.nickname : displayName,
-      avatarUrl: typeof profile?.avatarUrl === 'string' ? profile.avatarUrl : '',
-      customDisplayName: Boolean(profile?.customDisplayName),
-      customAvatarUrl: Boolean(profile?.customAvatarUrl),
-      balance: typeof profile?.balance === 'number' ? profile.balance : 0,
-      privilege: typeof profile?.privilege === 'string' ? profile.privilege : 'Обычный',
-      telegram: typeof profile?.telegram === 'string' ? profile.telegram : null,
-      discord: typeof profile?.discord === 'string' ? profile.discord : null,
-      twitch: typeof profile?.twitch === 'string' ? profile.twitch : null,
-      email_verified_at: profile?.email_verified_at || null,
-      isOnline: Boolean(profile?.isOnline),
-      createdAt: typeof profile?.createdAt === 'string' ? profile.createdAt : new Date().toISOString(),
-      updatedAt: typeof profile?.updatedAt === 'string' ? profile.updatedAt : new Date().toISOString()
-    };
-  };
+     return {
+       steamId,
+       email: typeof profile?.email === 'string' ? profile.email : '',
+       displayName,
+       nickname: typeof profile?.nickname === 'string' ? profile.nickname : displayName,
+       avatarUrl: typeof profile?.avatarUrl === 'string' ? profile.avatarUrl : '',
+       customDisplayName: Boolean(profile?.customDisplayName),
+       customAvatarUrl: Boolean(profile?.customAvatarUrl),
+       balance: typeof profile?.balance === 'number' ? profile.balance : 0,
+       privilege: typeof profile?.privilege === 'string' ? profile.privilege : 'Обычный',
+       telegram: typeof profile?.telegram === 'string' ? profile.telegram : null,
+       discord: typeof profile?.discord === 'string' ? profile.discord : null,
+       twitch: typeof profile?.twitch === 'string' ? profile.twitch : null,
+       email_verified_at: profile?.email_verified_at || null,
+       createdAt: typeof profile?.createdAt === 'string' ? profile.createdAt : new Date().toISOString(),
+       updatedAt: typeof profile?.updatedAt === 'string' ? profile.updatedAt : new Date().toISOString()
+     };
+   };
 
-  const updateOnlineStatus = (isOnline) => {
-    if (!onlineStatus) return;
-    onlineStatus.classList.toggle('cabinet__online-status--online', Boolean(isOnline));
-    onlineStatus.classList.toggle('cabinet__online-status--offline', !Boolean(isOnline));
-    onlineStatus.setAttribute('aria-label', isOnline ? 'В сети' : 'Не в сети');
-  };
-
-  const renderProfile = (user) => {
+   const renderProfile = (user) => {
     currentUser = normalizeServerProfile(user, currentUser.steamId || defaultSteamId);
     const displayName = normalizeDisplayName(currentUser);
 
     if (nameNode) nameNode.textContent = displayName;
     if (nicknameInput) nicknameInput.value = displayName;
     if (steamIdNode) steamIdNode.textContent = currentUser.steamId && currentUser.steamId !== defaultSteamId ? currentUser.steamId : 'Не задан';
-    if (avatarFallback) avatarFallback.textContent = makeInitials(displayName);
-    if (privilegeValue) privilegeValue.textContent = currentUser.privilege || 'Обычный';
-    if (balanceAmount) balanceAmount.textContent = `${currentUser.balance || 0} ₽`;
-    updateOnlineStatus(currentUser.isOnline);
-  };
+if (avatarFallback) avatarFallback.textContent = makeInitials(displayName);
+     if (balanceAmount) balanceAmount.textContent = `${currentUser.balance || 0} ₽`;
+   };
 
   const showMessage = (message, type = '') => {
     if (!editMessage) return;

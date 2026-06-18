@@ -46,8 +46,7 @@
                  <button class="cabinet__avatar-button" type="button" aria-label="Заменить аватар">
                      <span class="cabinet__avatar-fallback">ST</span>
                      <img class="cabinet__avatar-img" alt="Аватар профиля" src="" />
-                     <span class="cabinet__online-status" aria-label="Статус"></span>
-                 </button>
+</button>
                  <input class="cabinet__avatar-file-input" type="file" accept="image/*" hidden />
                  <div class="cabinet__info">
                      <p class="cabinet__welcome">Личный кабинет</p>
@@ -65,47 +64,31 @@
                  </div>
              </div>
 
-             <div class="cabinet__tabs">
-                 <button class="cabinet__tab cabinet__tab--active" data-tab="profile">Профиль</button>
-                 <button class="cabinet__tab" data-tab="balance">Баланс</button>
-                 <button class="cabinet__tab" data-tab="promo">Промокод</button>
-                 <button class="cabinet__tab" data-tab="links">Привязки</button>
-                 <button class="cabinet__tab" data-tab="stats">Статистика</button>
-             </div>
+<div class="cabinet__tabs">
+                  <button class="cabinet__tab cabinet__tab--active" data-tab="balance">Баланс</button>
+                  <button class="cabinet__tab" data-tab="links">Привязки</button>
+                  <button class="cabinet__tab" data-tab="stats">Статистика</button>
+              </div>
 
-             <div class="cabinet__tab-content">
-                 <div class="cabinet__tab-panel cabinet__tab-panel--active" data-tab="profile">
-                     <div class="cabinet__privilege">
-                         <span class="cabinet__privilege-label">Привилегия:</span>
-                         <span class="cabinet__privilege-value">Обычный</span>
-                     </div>
-                 </div>
+<div class="cabinet__tab-content">
+                  <div class="cabinet__tab-panel cabinet__tab-panel--active" data-tab="balance">
+                      <div class="cabinet__balance">
+                          <span class="cabinet__balance-amount">0 ₽</span>
+                          <button class="cabinet__balance-topup" type="button">Пополнить баланс</button>
+                      </div>
+                  </div>
 
-                 <div class="cabinet__tab-panel" data-tab="balance">
-                     <div class="cabinet__balance">
-                         <span class="cabinet__balance-amount">0 ₽</span>
-                         <button class="cabinet__balance-topup" type="button">Пополнить баланс</button>
-                     </div>
-                 </div>
-
-                 <div class="cabinet__tab-panel" data-tab="promo">
-                     <div class="cabinet__promo">
-                         <input class="cabinet__promo-input" type="text" placeholder="Введите промокод">
-                         <button class="cabinet__promo-activate" type="button">Активировать</button>
-                     </div>
-                 </div>
-
-                 <div class="cabinet__tab-panel" data-tab="links">
-                     <div class="cabinet__links">
-                         <button class="cabinet__link-button cabinet__link-button--telegram" type="button">Telegram</button>
-                         <button class="cabinet__link-button cabinet__link-button--discord" type="button">Discord</button>
-                         <button class="cabinet__link-button cabinet__link-button--twitch" type="button">Twitch</button>
-                         <div class="cabinet__email-section">
-                             <input class="cabinet__email-input" type="email" placeholder="Email для привязки">
-                             <button class="cabinet__email-save" type="button">Привязать</button>
-                         </div>
-                     </div>
-                 </div>
+                  <div class="cabinet__tab-panel" data-tab="links">
+                      <div class="cabinet__links">
+                          <button class="cabinet__link-button cabinet__link-button--telegram" type="button">Telegram</button>
+                          <button class="cabinet__link-button cabinet__link-button--discord" type="button">Discord</button>
+                          <button class="cabinet__link-button cabinet__link-button--twitch" type="button">Twitch</button>
+                          <div class="cabinet__email-section">
+                              <input class="cabinet__email-input" type="email" placeholder="Email для привязки">
+                              <button class="cabinet__email-save" type="button">Привязать</button>
+                          </div>
+                      </div>
+                  </div>
 
                  <div class="cabinet__tab-panel" data-tab="stats">
                      <div class="cabinet__stats">
@@ -116,15 +99,14 @@
                              <p class="cabinet__stats-placeholder">Статистика будет доступна после выбора сервера</p>
                          </div>
                      </div>
-                 </div>
-             </div>
+</div>
 
-             <div class="cabinet__body">
-                 <p class="cabinet__edit-message" aria-live="polite"></p>
-                 <button class="cabinet__logout-button" type="button">Выйти из кабинета</button>
-             </div>
-         </div>
-     </main>
+              <div class="cabinet__body">
+                  <p class="cabinet__edit-message" aria-live="polite"></p>
+                  <button class="cabinet__logout-button" type="button">Выйти из кабинета</button>
+              </div>
+          </div>
+      </main>
 
     <footer class="footer">
             <p>&copy; 2026 Barelands. Все права защищены.</p>

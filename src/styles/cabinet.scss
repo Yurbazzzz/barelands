@@ -1,4 +1,4 @@
-.cabinet {
+﻿.cabinet {
    min-height: calc(100vh - 260px);
    display: flex;
    align-items: center;
@@ -8,8 +8,9 @@
 }
 
 .cabinet__panel {
-   width: min(700px, 100%);
-   background: #111;
+    width: 100%;
+    max-width: 700px;
+    background: #111;
    border: 1px solid rgba(255, 99, 71, 0.12);
    border-radius: 32px;
    box-shadow: 0 30px 90px rgba(0, 0, 0, 0.42);
@@ -36,9 +37,6 @@
    background: linear-gradient(135deg, #ff6347 0%, #ff8c00 100%);
    display: grid;
    place-items: center;
-   color: #fff;
-   font-size: 42px;
-   font-weight: 900;
    letter-spacing: 0.02em;
    text-transform: uppercase;
    box-shadow: 0 24px 60px rgba(255, 99, 71, 0.24);
@@ -73,27 +71,6 @@
    z-index: 1;
 }
 
-.cabinet__online-status {
-   position: absolute;
-   bottom: 4px;
-   right: 4px;
-   width: 20px;
-   height: 20px;
-   border-radius: 50%;
-   background: #666;
-   border: 3px solid #111;
-   z-index: 2;
-}
-
-.cabinet__online-status--online {
-   background: #22c55e;
-   box-shadow: 0 0 10px rgba(34, 197, 94, 0.5);
-}
-
-.cabinet__online-status--offline {
-   background: #ef4444;
-}
-
 .cabinet__info {
    min-width: 220px;
    display: grid;
@@ -102,23 +79,17 @@
 
 .cabinet__welcome {
    margin: 0;
-   color: #ffbfa3;
-   font-size: 16px;
    text-transform: uppercase;
    letter-spacing: 0.18em;
 }
 
 .cabinet__name {
    margin: 0;
-   font-size: clamp(2rem, 2.5vw, 3.4rem);
-   color: #fff;
    line-height: 1.05;
 }
 
 .cabinet__subtitle {
    margin: 0;
-   color: #a0a0a0;
-   font-size: 16px;
 }
 
 .cabinet__name-row {
@@ -130,8 +101,6 @@
 
 .cabinet__name {
    margin: 0;
-   font-size: clamp(2rem, 2.5vw, 3.4rem);
-   color: #fff;
    line-height: 1.05;
 }
 
@@ -142,8 +111,6 @@
 }
 
 .cabinet__nickname-field span {
-   color: #a0a0a0;
-   font-size: 14px;
 }
 
 .cabinet__nickname-input {
@@ -152,8 +119,6 @@
    border: 1px solid rgba(255, 255, 255, 0.12);
    border-radius: 14px;
    background: rgba(0, 0, 0, 0.28);
-   color: #fff;
-   font-size: 16px;
    outline: none;
    transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
@@ -174,8 +139,6 @@
    border: none;
    border-radius: 999px;
    background: rgba(255, 99, 71, 0.9);
-   color: #fff;
-   font-weight: 700;
    cursor: pointer;
    transition: transform 0.2s ease, background 0.2s ease;
 }
@@ -190,8 +153,6 @@
    border: 1px solid rgba(255, 255, 255, 0.16);
    border-radius: 999px;
    background: rgba(255, 255, 255, 0.06);
-   color: #fff;
-   font-weight: 700;
    cursor: pointer;
    transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
 }
@@ -207,10 +168,8 @@
    height: 40px;
    border: 1px solid rgba(255, 255, 255, 0.12);
    border-radius: 50%;
-   color: #fff;
    background: rgba(255, 255, 255, 0.06);
    cursor: pointer;
-   font-size: 1.1rem;
    line-height: 1;
    transition: transform 0.2s ease, background 0.2s ease;
 }
@@ -235,10 +194,8 @@
    border: 1px solid rgba(255, 255, 255, 0.12);
    border-radius: 14px;
    padding: 13px 15px;
-   color: #fff;
    background: rgba(0, 0, 0, 0.28);
    outline: none;
-   font-size: 1rem;
 }
 
 .cabinet__nickname-editor-input:focus {
@@ -260,21 +217,15 @@
 .cabinet__edit-message {
    margin: 0;
    min-height: 20px;
-   color: #a0a0a0;
-   font-size: 0.95rem;
 }
 
 .cabinet__edit-message--error {
-  color: #ff8a8a;
 }
 
 .cabinet__edit-message--success {
-  color: #8ccf7f;
 }
 
 .cabinet__steam-id {
-   color: #ff6347;
-   font-weight: 700;
 }
 
 .cabinet__logout-button {
@@ -282,11 +233,8 @@
    padding: 16px 30px;
    border: none;
    border-radius: 999px;
-   color: #fff;
    background: linear-gradient(135deg, #ff6347 0%, #ff9347 100%);
    cursor: pointer;
-   font-size: 1rem;
-   font-weight: 700;
    transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
 
@@ -305,18 +253,14 @@
 .cabinet__tab {
    padding: 10px 20px;
    background: rgba(255, 255, 255, 0.06);
-   color: #a0a0a0;
    border: 1px solid transparent;
    border-radius: 14px;
    cursor: pointer;
-   font-size: 14px;
-   font-weight: 600;
    transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
 }
 
 .cabinet__tab--active {
    background: #ff6347;
-   color: #fff;
    border-color: #ff6347;
 }
 
@@ -327,24 +271,10 @@
 
 .cabinet__tab-panel--active {
    display: block;
-}
+ }
 
-.cabinet__privilege {
-   display: flex;
-   align-items: center;
-   gap: 10px;
-   margin-bottom: 16px;
-}
+ @media (max-width: 768px) {
 
-.cabinet__privilege-label {
-   color: #a0a0a0;
-   font-size: 16px;
-}
-
-.cabinet__privilege-value {
-   color: #ff6347;
-   font-weight: 700;
-   font-size: 16px;
 }
 
 .cabinet__balance {
@@ -355,18 +285,13 @@
 }
 
 .cabinet__balance-amount {
-   font-size: 32px;
-   font-weight: 900;
-   color: #ff6347;
 }
 
 .cabinet__balance-topup {
    padding: 12px 24px;
    background: linear-gradient(135deg, #ff6347 0%, #ff9347 100%);
-   color: #fff;
    border: none;
    border-radius: 14px;
-   font-weight: 700;
    cursor: pointer;
    transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
@@ -389,8 +314,6 @@
    border: 1px solid rgba(255, 255, 255, 0.12);
    border-radius: 14px;
    background: rgba(0, 0, 0, 0.28);
-   color: #fff;
-   font-size: 16px;
 }
 
 .cabinet__promo-input:focus {
@@ -402,10 +325,8 @@
 .cabinet__promo-activate {
    padding: 12px 24px;
    background: #ff6347;
-   color: #fff;
    border: none;
    border-radius: 14px;
-   font-weight: 700;
    cursor: pointer;
    transition: background 0.2s ease;
 }
@@ -423,24 +344,20 @@
    padding: 12px 20px;
    border: none;
    border-radius: 14px;
-   font-weight: 600;
    cursor: pointer;
    transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .cabinet__link-button--telegram {
    background: #0088cc;
-   color: #fff;
 }
 
 .cabinet__link-button--discord {
    background: #5865f2;
-   color: #fff;
 }
 
 .cabinet__link-button--twitch {
    background: #9146ff;
-   color: #fff;
 }
 
 .cabinet__link-button:hover {
@@ -460,17 +377,13 @@
    border: 1px solid rgba(255, 255, 255, 0.12);
    border-radius: 14px;
    background: rgba(0, 0, 0, 0.28);
-   color: #fff;
-   font-size: 16px;
 }
 
 .cabinet__email-save {
    padding: 12px 24px;
    background: #ff6347;
-   color: #fff;
    border: none;
    border-radius: 14px;
-   font-weight: 700;
    cursor: pointer;
 }
 
@@ -484,8 +397,6 @@
    border: 1px solid rgba(255, 255, 255, 0.12);
    border-radius: 14px;
    background: rgba(0, 0, 0, 0.28);
-   color: #fff;
-   font-size: 16px;
    width: fit-content;
 }
 
@@ -497,7 +408,6 @@
 }
 
 .cabinet__stats-placeholder {
-   color: #a0a0a0;
    font-style: italic;
 }
 
@@ -515,11 +425,9 @@
    .cabinet__avatar-button {
      width: 96px;
      height: 96px;
-     font-size: 30px;
    }
 
    .cabinet__name {
-     font-size: 2rem;
    }
 
    .cabinet__balance {
