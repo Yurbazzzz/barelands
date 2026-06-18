@@ -1,5 +1,5 @@
-import { saveProfileToServer, fetchSavedProfile } from './profile-api.js';
-import { getCurrentUser, saveCurrentUser } from './storage.js';
+import { saveProfileToServer } from './profile-api.js';
+import { getCurrentUser } from './storage.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     const tabButtons = document.querySelectorAll('.cabinet__tab');
@@ -11,8 +11,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const statsServer = document.querySelector('.cabinet__stats-server');
     const statsData = document.querySelector('.cabinet__stats-data');
     const linkButtons = document.querySelectorAll('.cabinet__link-button');
-    const emailInput = document.querySelector('.cabinet__email-input');
-    const emailSave = document.querySelector('.cabinet__email-save');
 
     function switchTab(targetTab) {
         tabButtons.forEach(btn => btn.classList.toggle('cabinet__tab--active', btn.dataset.tab === targetTab));
@@ -48,22 +46,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    emailSave?.addEventListener('click', () => {
-        const email = emailInput.value.trim();
-        if (!email) {
-            alert('Введите email');
-            return;
-        }
-        const user = getCurrentUser();
-        if (user) {
-            const updated = { ...user, email, email_verified_at: null };
-            saveCurrentUser(updated);
-            saveProfileToServer(updated);
-            emailInput.value = '';
-            alert('Email сохранён. Проверьте почту для подтверждения.');
-        }
-    });
-
     const servers = [
         { id: 1, name: 'Barelands 1' },
         { id: 2, name: 'Barelands 2' },
@@ -92,5 +74,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const user = getCurrentUser();
     if (user && balanceAmount) {
         balanceAmount.textContent = `${user.balance || 0} ₽`;
+        saveProfileToServer(user).catch(() => {});
     }
 });
