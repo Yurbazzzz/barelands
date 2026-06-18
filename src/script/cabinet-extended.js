@@ -1,5 +1,5 @@
 import { saveProfileToServer } from './profile-api.js';
-import { getCurrentUser } from './storage.js';
+import { getCurrentUser, saveCurrentUser } from './storage.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     const tabButtons = document.querySelectorAll('.cabinet__tab');
@@ -11,6 +11,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const statsServer = document.querySelector('.cabinet__stats-server');
     const statsData = document.querySelector('.cabinet__stats-data');
     const linkButtons = document.querySelectorAll('.cabinet__link-button');
+    const saveNameButton = document.querySelector('.cabinet__save-name-button');
+    const nicknameInput = document.querySelector('.cabinet__nickname-input');
+    const messageEl = document.querySelector('.cabinet__edit-message');
+    const avatarButton = document.querySelector('.cabinet__avatar-button');
+    const avatarImg = document.querySelector('.cabinet__avatar-img');
+    const avatarFallback = document.querySelector('.cabinet__avatar-fallback');
+    const cabinetName = document.querySelector('.cabinet__name');
+    const steamIdEl = document.querySelector('.cabinet__steam-id');
+    const logoutButton = document.querySelector('.cabinet__logout-button');
 
     function switchTab(targetTab) {
         tabButtons.forEach(btn => btn.classList.toggle('cabinet__tab--active', btn.dataset.tab === targetTab));
@@ -71,9 +80,95 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    const user = getCurrentUser();
-    if (user && balanceAmount) {
-        balanceAmount.textContent = `${user.balance || 0} ₽`;
-        saveProfileToServer(user).catch(() => {});
+    function renderUser(user) {
+        if (!user) return;
+        if (balanceAmount) balanceAmount.textContent = `${user.balance || 0} ₽`;
+        if (cabinetName) {
+            cabinetName.textContent = user.nickname || user.displayName || user.email?.split('@')[0] || `steam_${user.steamId?.slice(-6) || ''}`;
+        }
+        if (steamIdEl) steamIdEl.textContent = user.steamId || 'Не задан';
+        if (avatarImg && user.avatarUrl) {
+            avatarImg.src = user.avatarUrl;
+            avatarImg.classList.add('loaded');
+            avatarImg.onload = () => avatarImg.classList.add('loaded');
+        }
+        if (avatarFallback) {
+            avatarFallback.textContent = getInitials(user.nickname || user.displayName || user.email || 'ST');
+        }
+        if (nicknameInput) {
+            nicknameInput.value = user.nickname || '';
+        }
     }
+
+    function getInitials(text) {
+        const parts = text?.replace(/^steam_/i, '').split(/[^A-Za-z0-9]+/).filter(Boolean);
+        if (parts.length === 0) return 'ST';
+        if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+        return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+
+    function showMessage(text, isSuccess = true) {
+        if (messageEl) {
+            messageEl.textContent = text;
+            messageEl.classList.toggle('cabinet__edit-message--success', isSuccess);
+            messageEl.classList.toggle('cabinet__edit-message--error', !isSuccess);
+        }
+    }
+
+    const user = getCurrentUser();
+    if (user) {
+        renderUser(user);
+    }
+
+    saveNameButton?.addEventListener('click', async () => {
+        const user = getCurrentUser();
+        if (!user?.steamId) {
+            showMessage('Пользователь не найден', false);
+            return;
+        }
+        const newNickname = nicknameInput.value.trim().substring(0, 32);
+        const updatedUser = { ...user, nickname: newNickname };
+        saveCurrentUser(updatedUser);
+        renderUser(updatedUser);
+        try {
+            await saveProfileToServer(updatedUser);
+            showMessage('Никнейм сохранён', true);
+        } catch (error) {
+            showMessage('Не удалось сохранить на сервере', false);
+        }
+    });
+
+    avatarButton?.addEventListener('click', () => {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.onchange = () => {
+            const file = input.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = () => {
+                const user = getCurrentUser();
+                if (!user?.steamId) return;
+                const updatedUser = { ...user, avatarUrl: reader.result, customAvatarUrl: true };
+                saveCurrentUser(updatedUser);
+                if (avatarImg) {
+                    avatarImg.src = reader.result;
+                    avatarImg.classList.add('loaded');
+                }
+                saveProfileToServer(updatedUser).catch(() => {});
+            };
+            reader.readAsDataURL(file);
+        };
+        input.click();
+    });
+
+    logoutButton?.addEventListener('click', async () => {
+        const user = getCurrentUser();
+        if (user?.steamId) {
+            await saveProfileToServer(user);
+        }
+        window.location.href = '../index.html';
+        window.sessionStorage.clear();
+        window.localStorage.removeItem('barelandsUser');
+    });
 });
