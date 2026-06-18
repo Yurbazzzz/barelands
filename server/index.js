@@ -65,9 +65,13 @@ function normalizeProfiles(value) {
 }
 
 function ensureProfilesFile() {
-  fs.mkdirSync(path.dirname(profilesPath), { recursive: true });
-  if (!fs.existsSync(profilesPath)) {
-    fs.writeFileSync(profilesPath, '[]');
+  try {
+    fs.mkdirSync(path.dirname(profilesPath), { recursive: true });
+    if (!fs.existsSync(profilesPath)) {
+      fs.writeFileSync(profilesPath, '[]');
+    }
+  } catch (error) {
+    console.error('[ensureProfilesFile] error:', error.message);
   }
 }
 
@@ -75,17 +79,22 @@ function readProfiles() {
   ensureProfilesFile();
 
   try {
-    return normalizeProfiles(JSON.parse(fs.readFileSync(profilesPath, 'utf8')));
-  } catch {
+    const content = fs.readFileSync(profilesPath, 'utf8');
+    return normalizeProfiles(JSON.parse(content));
+  } catch (error) {
+    console.error('[readProfiles] error:', error.message);
     return [];
   }
 }
 
 function writeProfiles(profiles) {
-  ensureProfilesFile();
-  const tempPath = `${profilesPath}.tmp`;
-  fs.writeFileSync(tempPath, JSON.stringify(profiles, null, 2));
-  fs.renameSync(tempPath, profilesPath);
+  try {
+    ensureProfilesFile();
+    fs.writeFileSync(profilesPath, JSON.stringify(profiles, null, 2));
+  } catch (error) {
+    console.error('[writeProfiles] error:', error.message);
+    throw error;
+  }
 }
 
 function sendJson(res, statusCode, data) {
@@ -261,6 +270,7 @@ const server = http.createServer(async (req, res) => {
 
     sendJson(res, 404, { error: 'Not found' });
   } catch (error) {
+    console.error('[handler error]', error);
     sendJson(res, error.statusCode || 500, { error: error.message || 'Internal server error' });
   }
 });
