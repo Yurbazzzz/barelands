@@ -128,7 +128,7 @@ function readBody(req) {
   });
 }
 
-function normalizeProfile(body, existing = {}) {
+function normalizeProfile(body, existing = null) {
   const steamId = String(body.steamId || '').trim();
   if (!/^\d+$/.test(steamId)) {
     const error = new Error('steamId is required');
@@ -151,7 +151,7 @@ function normalizeProfile(body, existing = {}) {
     twitch: typeof body.twitch === 'string' ? body.twitch : null,
     email_verified_at: body.email_verified_at || null,
     isOnline: Boolean(body.isOnline),
-    createdAt: typeof existing.createdAt === 'string' ? existing.createdAt : new Date().toISOString(),
+    createdAt: existing && typeof existing.createdAt === 'string' ? existing.createdAt : new Date().toISOString(),
     updatedAt: new Date().toISOString()
   };
 }
