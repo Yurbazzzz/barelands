@@ -16,14 +16,14 @@ const serverInfo = [
            name: 'Сервер 2',
            status: 'Оффлайн',
            players: '0/500',
-           imageClass: 'server-modal__image--server3',
+           imageClass: 'server-modal__image--server2',
            isDev: true
        },
        {
            name: 'Сервер 3',
            status: 'Онлайн',
            players: '350/500',
-           imageClass: 'server-modal__image--server2',
+           imageClass: 'server-modal__image--server3',
            isDev: false
        },
        {
