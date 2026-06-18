@@ -62,14 +62,21 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    backdrop.addEventListener('click', closeModal);
-    modalClose.addEventListener('click', closeModal);
+    if (backdrop) {
+        backdrop.addEventListener('click', closeModal);
+    }
+
+    if (modalClose) {
+        modalClose.addEventListener('click', closeModal);
+    }
+
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
 
-    modalConfirm.addEventListener('click', () => {
-        const server = modalServerSelect.value;
-        console.log('Выбран сервер:', server, 'для товара', modalTitle.textContent);
-        // Здесь можно добавить логику: добавить в корзину, открыть форму заказа и т.д.
-        closeModal();
-    });
+    if (modalConfirm) {
+        modalConfirm.addEventListener('click', () => {
+            const server = modalServerSelect.value;
+            console.log('Выбран сервер:', server, 'для товара', modalTitle.textContent);
+            closeModal();
+        });
+    }
 });
