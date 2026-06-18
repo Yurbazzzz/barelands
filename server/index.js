@@ -7,7 +7,9 @@ const port = process.env.PORT || 3001;
 const rootDir = path.resolve(__dirname, '..');
 const distDir = path.join(rootDir, 'dist');
 const publicDir = fs.existsSync(distDir) ? distDir : path.join(rootDir, 'src');
-const profilesPath = path.join(__dirname, 'profiles.json');
+const profilesPath = process.env.RENDER_TMPDIR
+  ? path.join(process.env.RENDER_TMPDIR, 'profiles.json')
+  : path.join(__dirname, 'profiles.json');
 const profileApiPrefix = '/api/profile';
 
 const mimeTypes = {
