@@ -25,3 +25,6 @@ build/
 # Временные файлы
 .cache/
 .temp/
+
+# Local Netlify folder
+.netlify
