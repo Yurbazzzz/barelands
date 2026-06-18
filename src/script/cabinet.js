@@ -194,7 +194,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const persistProfile = async (nextUser, successMessage) => {
     const normalizedUser = normalizeServerProfile(nextUser, currentUser.steamId || defaultSteamId);
-    const savedUser = await saveProfileToServer(normalizedUser);
+    const savedUser = saveProfileToServer(normalizedUser);
     const serverUser = normalizeServerProfile(savedUser || {}, normalizedUser.steamId);
 
     currentUser = normalizeServerProfile({
@@ -234,7 +234,7 @@ document.addEventListener('DOMContentLoaded', () => {
       nickname: displayName,
       customDisplayName: true,
       updatedAt: new Date().toISOString()
-    }, 'Имя профиля сохранено в JSON на сервере.');
+    }, 'Имя профиля сохранено.');
   };
 
   const saveAvatar = async (file) => {
@@ -264,7 +264,7 @@ document.addEventListener('DOMContentLoaded', () => {
         avatarUrl,
         customAvatarUrl: true,
         updatedAt: new Date().toISOString()
-      }, 'Фото профиля сохранено в JSON на сервере.');
+      }, 'Фото профиля сохранено.');
     } catch (error) {
       console.error('Не удалось сохранить аватар:', error);
       showMessage('Не удалось сохранить фото профиля. Попробуйте другой файл.', 'error');
@@ -272,14 +272,11 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   const handleLogout = async () => {
-    if (currentUser.steamId && currentUser.steamId !== defaultSteamId) {
-      await saveProfileToServer(currentUser);
-    }
     removeCurrentUser();
     window.location.href = '../index.html';
   };
 
-  const loadProfileFromServer = async () => {
+  const loadProfileFromStorage = async () => {
     const sessionUser = getCurrentUser();
     const steamId = String(sessionUser?.steamId || defaultSteamId);
     const cachedUser = normalizeServerProfile(sessionUser || createDefaultUser(steamId), steamId);
@@ -292,52 +289,17 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    try {
-      showMessage('Загрузка профиля из серверного JSON...');
-      const savedProfile = await fetchSavedProfile(steamId);
-
-      if (savedProfile?.steamId) {
-        const serverUser = normalizeServerProfile(savedProfile, steamId);
-
-        currentUser = normalizeServerProfile({
-          ...serverUser,
-          ...cachedUser,
-          displayName: cachedUser.customDisplayName ? cachedUser.displayName : serverUser.displayName,
-          nickname: cachedUser.customDisplayName ? cachedUser.nickname : serverUser.nickname,
-          avatarUrl: cachedUser.customAvatarUrl ? cachedUser.avatarUrl : serverUser.avatarUrl,
-          customDisplayName: cachedUser.customDisplayName || serverUser.customDisplayName,
-          customAvatarUrl: cachedUser.customAvatarUrl || serverUser.customAvatarUrl
-        }, steamId);
-
-        await saveProfileToServer(currentUser);
-      } else if (cachedUser.steamId && cachedUser.steamId !== defaultSteamId) {
-        currentUser = cachedUser;
-        await saveProfileToServer(currentUser);
-        showMessage('Серверный JSON не найден, поэтому профиль загружен из текущей сессии.', 'success');
-      } else {
-        const steamProfile = await loadSteamProfile(steamId, {
-          ...currentUser,
-          customDisplayName: false,
-          customAvatarUrl: false
-        });
-        currentUser = normalizeServerProfile(steamProfile, steamId);
-        await saveProfileToServer(currentUser);
-      }
-
+    if (cachedUser.steamId && cachedUser.steamId !== defaultSteamId) {
+      showMessage('Профиль загружен из локального хранилища.', 'success');
+    } else {
+      const steamProfile = await loadSteamProfile(steamId, {
+        ...currentUser,
+        customDisplayName: false,
+        customAvatarUrl: false
+      });
+      currentUser = normalizeServerProfile(steamProfile, steamId);
       saveCurrentUser(currentUser);
       renderProfile(currentUser);
-      applyAvatar(currentUser.avatarUrl || getDefaultAvatarUrl(currentUser.steamId));
-
-      if (savedProfile?.steamId) {
-        showMessage('Профиль загружен из серверного JSON.', 'success');
-      }
-    } catch (error) {
-      console.warn('Не удалось загрузить профиль:', error.message);
-      currentUser = cachedUser;
-      saveCurrentUser(currentUser);
-      renderProfile(currentUser);
-      applyAvatar(currentUser.avatarUrl || getDefaultAvatarUrl(currentUser.steamId));
-      showMessage('Не удалось загрузить серверный JSON. Показаны данные текущей сессии.', 'error');
     }
   };
 
@@ -368,5 +330,5 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  loadProfileFromServer();
+  loadProfileFromStorage();
 });
