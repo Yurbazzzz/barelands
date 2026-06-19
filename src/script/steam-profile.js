@@ -1,4 +1,4 @@
-const steamWebApiKey = window.BARELANDS_STEAM_API_KEY || '';
+const steamWebApiKey = window.BARELANDS_STEAM_API_KEY || 'libsql://barelands-yurbazzzz.aws-eu-west-1.turso.io';
 const requestTimeoutMs = 6000;
 
 function getDefaultDisplayName(user, steamId) {
@@ -122,32 +122,23 @@ function mergeProfile(user, steamId, profile) {
   };
 }
 
-export async function loadSteamProfile(steamId, user = {}) {
-  if (!steamId) {
-    return {
-      ...user,
-      displayName: getDefaultDisplayName(user),
-      avatarUrl: getDefaultAvatarUrl(user?.steamId)
-    };
-  }
+// export async function loadSteamProfile(steamId, user = {}) {
+//   if (!steamId) {
+//     return {
+//       ...user,
+//       displayName: getDefaultDisplayName(user),
+//       avatarUrl: getDefaultAvatarUrl(user?.steamId)
+//     };
+//   }
 
-  try {
-    return mergeProfile(user, steamId, await fetchSteamWebApiProfile(steamId));
-  } catch (error) {
-    console.warn('Не удалось загрузить профиль Steam через Web API:', error.message);
-  }
+//   // try {
+//   //   console.log(user);
+//   //   console.log(steamId);
+//   //   console.log(await fetchSteamWebApiProfile(steamId));
+//   //   return mergeProfile(user, steamId, await fetchSteamWebApiProfile(steamId));
+//   // } catch (error) {
+//   //   console.warn('Не удалось загрузить профиль Steam через Web API:', error.message);
+//   // }
 
-  try {
-    return mergeProfile(user, steamId, await fetchSteamXmlProfile(steamId));
-  } catch (error) {
-    console.warn('Не удалось загрузить профиль Steam через XML:', error.message);
-  }
-
-  try {
-    return mergeProfile(user, steamId, await fetchJinaProfile(steamId));
-  } catch (error) {
-    console.warn('Не удалось загрузить профиль Steam через Jina:', error.message);
-  }
-
-  return mergeProfile(user, steamId, {});
-}
+//   return mergeProfile(user, steamId, {});
+// }
