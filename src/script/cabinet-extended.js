@@ -165,7 +165,11 @@ document.addEventListener('DOMContentLoaded', () => {
     logoutButton?.addEventListener('click', async () => {
         const user = getCurrentUser();
         if (user?.steamId) {
-            await saveProfileToServer(user);
+            try {
+                await saveProfileToServer(user);
+            } catch (error) {
+                console.warn('Не удалось сохранить профиль перед выходом:', error.message);
+            }
         }
         window.location.href = '../index.html';
         window.sessionStorage.clear();

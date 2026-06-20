@@ -1,4 +1,4 @@
-const steamWebApiKey = window.BARELANDS_STEAM_API_KEY || 'libsql://barelands-yurbazzzz.aws-eu-west-1.turso.io';
+const steamWebApiKey = window.BARELANDS_STEAM_API_KEY || '';
 const requestTimeoutMs = 6000;
 
 function getDefaultDisplayName(user, steamId) {
@@ -100,7 +100,7 @@ async function fetchSteamXmlProfile(steamId) {
 }
 
 async function fetchJinaProfile(steamId) {
-  const markdown = await fetchTextWithTimeout(`https://r.jina.ai/http://https://steamcommunity.com/profiles/${steamId}/`, 8000);
+  const markdown = await fetchTextWithTimeout(`https://r.jina.ai/https://steamcommunity.com/profiles/${steamId}/`, 8000);
   return parseJinaMarkdown(markdown);
 }
 
@@ -122,23 +122,32 @@ function mergeProfile(user, steamId, profile) {
   };
 }
 
-// export async function loadSteamProfile(steamId, user = {}) {
-//   if (!steamId) {
-//     return {
-//       ...user,
-//       displayName: getDefaultDisplayName(user),
-//       avatarUrl: getDefaultAvatarUrl(user?.steamId)
-//     };
-//   }
+export async function loadSteamProfile(steamId, user = {}) {
+  if (!steamId) {
+    return {
+      ...user,
+      displayName: getDefaultDisplayName(user),
+      avatarUrl: getDefaultAvatarUrl(user?.steamId)
+    };
+  }
 
-//   // try {
-//   //   console.log(user);
-//   //   console.log(steamId);
-//   //   console.log(await fetchSteamWebApiProfile(steamId));
-//   //   return mergeProfile(user, steamId, await fetchSteamWebApiProfile(steamId));
-//   // } catch (error) {
-//   //   console.warn('Не удалось загрузить профиль Steam через Web API:', error.message);
-//   // }
+  try {
+    return mergeProfile(user, steamId, await fetchSteamWebApiProfile(steamId));
+  } catch (error) {
+    console.warn('Не удалось загрузить профиль Steam через Web API:', error.message);
+  }
 
-//   return mergeProfile(user, steamId, {});
-// }
+  try {
+    return mergeProfile(user, steamId, await fetchSteamXmlProfile(steamId));
+  } catch (error) {
+    console.warn('Не удалось загрузить профиль Steam через XML:', error.message);
+  }
+
+  try {
+    return mergeProfile(user, steamId, await fetchJinaProfile(steamId));
+  } catch (error) {
+    console.warn('Не удалось загрузить профиль Steam через Jina Reader:', error.message);
+  }
+
+  return mergeProfile(user, steamId, {});
+}

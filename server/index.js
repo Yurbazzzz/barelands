@@ -2,14 +2,12 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const { URL } = require('url');
+const profileStore = require('./lib/profile-store');
 
 const port = process.env.PORT || 3001;
 const rootDir = path.resolve(__dirname, '..');
 const distDir = path.join(rootDir, 'dist');
 const publicDir = fs.existsSync(distDir) ? distDir : path.join(rootDir, 'src');
-const profilesPath = process.env.RENDER_TMPDIR
-  ? path.join(process.env.RENDER_TMPDIR, 'profiles.json')
-  : path.join(__dirname, 'profiles.json');
 const profileApiPrefix = '/api/profile';
 
 const mimeTypes = {
@@ -26,77 +24,6 @@ const mimeTypes = {
   '.woff2': 'font/woff2'
 };
 
-function normalizeStoredProfile(profile) {
-  if (!profile || typeof profile !== 'object') return null;
-
-  const steamId = String(profile.steamId || '').trim();
-  if (!/^\d+$/.test(steamId)) return null;
-
-  return {
-    steamId,
-    email: typeof profile.email === 'string' ? profile.email : '',
-    displayName: typeof profile.displayName === 'string' ? profile.displayName : `steam_${steamId.slice(-6)}`,
-    nickname: typeof profile.nickname === 'string' ? profile.nickname : '',
-    avatarUrl: typeof profile.avatarUrl === 'string' ? profile.avatarUrl : '',
-    customDisplayName: Boolean(profile.customDisplayName),
-    customAvatarUrl: Boolean(profile.customAvatarUrl),
-    balance: typeof profile.balance === 'number' ? profile.balance : 0,
-    privilege: typeof profile.privilege === 'string' ? profile.privilege : 'Обычный',
-    telegram: typeof profile.telegram === 'string' ? profile.telegram : null,
-    discord: typeof profile.discord === 'string' ? profile.discord : null,
-    twitch: typeof profile.twitch === 'string' ? profile.twitch : null,
-    email_verified_at: profile.email_verified_at || null,
-    isOnline: Boolean(profile.isOnline),
-    createdAt: typeof profile.createdAt === 'string' ? profile.createdAt : new Date().toISOString(),
-    updatedAt: typeof profile.updatedAt === 'string' ? profile.updatedAt : new Date().toISOString()
-  };
-}
-
-function normalizeProfiles(value) {
-  if (Array.isArray(value)) {
-    return value.map(normalizeStoredProfile).filter(Boolean);
-  }
-
-  if (value && typeof value === 'object') {
-    return Object.values(value).map(normalizeStoredProfile).filter(Boolean);
-  }
-
-  return [];
-}
-
-function ensureProfilesFile() {
-  try {
-    fs.mkdirSync(path.dirname(profilesPath), { recursive: true });
-    if (!fs.existsSync(profilesPath)) {
-      fs.writeFileSync(profilesPath, '[]');
-    }
-  } catch (error) {
-    console.error('[ensureProfilesFile] error:', error.message);
-  }
-}
-
-function readProfiles() {
-  ensureProfilesFile();
-
-  try {
-    const content = fs.readFileSync(profilesPath, 'utf8');
-    return normalizeProfiles(JSON.parse(content));
-  } catch (error) {
-    console.error('[readProfiles] error:', error.message);
-    return [];
-  }
-}
-
-function writeProfiles(profiles) {
-  try {
-    ensureProfilesFile();
-    fs.writeFileSync(profilesPath, JSON.stringify(profiles, null, 2));
-  } catch (error) {
-    console.error('[writeProfiles] error:', error.message);
-    throw error;
-  }
-}
-
 function sendJson(res, statusCode, data) {
   res.writeHead(statusCode, {
     'Content-Type': 'application/json; charset=utf-8',
@@ -112,7 +39,7 @@ function readBody(req) {
     let body = '';
     req.on('data', (chunk) => {
       body += chunk;
-      if (body.length > 2 * 1024 * 1024) {
+      if (body.length > 8 * 1024 * 1024) {
         reject(new Error('Request body is too large'));
         req.destroy();
       }
@@ -128,40 +55,9 @@ function readBody(req) {
   });
 }
 
-function normalizeProfile(body, existing = null) {
-  const steamId = String(body.steamId || '').trim();
-  if (!/^\d+$/.test(steamId)) {
-    const error = new Error('steamId is required');
-    error.statusCode = 400;
-    throw error;
-  }
-
-  return {
-    steamId,
-    email: typeof body.email === 'string' ? body.email : '',
-    displayName: typeof body.displayName === 'string' ? body.displayName : `steam_${steamId.slice(-6)}`,
-    nickname: typeof body.nickname === 'string' ? body.nickname : '',
-    avatarUrl: typeof body.avatarUrl === 'string' ? body.avatarUrl : '',
-    customDisplayName: Boolean(body.customDisplayName),
-    customAvatarUrl: Boolean(body.customAvatarUrl),
-    balance: typeof body.balance === 'number' ? body.balance : 0,
-    privilege: typeof body.privilege === 'string' ? body.privilege : 'Обычный',
-    telegram: typeof body.telegram === 'string' ? body.telegram : null,
-    discord: typeof body.discord === 'string' ? body.discord : null,
-    twitch: typeof body.twitch === 'string' ? body.twitch : null,
-    email_verified_at: body.email_verified_at || null,
-    isOnline: Boolean(body.isOnline),
-    createdAt: existing && typeof existing.createdAt === 'string' ? existing.createdAt : new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  };
-}
-
-function findProfile(profiles, steamId) {
-  return profiles.find((profile) => profile.steamId === steamId) || null;
-}
-
 function getSteamIdFromPath(pathname) {
-  return decodeURIComponent(pathname.replace(`${profileApiPrefix}/`, ''));
+  const decodedPath = pathname.replace(`${profileApiPrefix}/`, '');
+  return decodedPath ? decodeURIComponent(decodedPath) : null;
 }
 
 function resolveStaticPath(pathname) {
@@ -222,8 +118,6 @@ const server = http.createServer(async (req, res) => {
 
   try {
     if (requestUrl.pathname.startsWith(profileApiPrefix)) {
-      const profiles = readProfiles();
-
       if (req.method === 'GET') {
         const steamId = requestUrl.searchParams.get('steamId') || getSteamIdFromPath(requestUrl.pathname);
         if (!steamId) {
@@ -231,17 +125,13 @@ const server = http.createServer(async (req, res) => {
           return;
         }
 
-        sendJson(res, 200, findProfile(profiles, steamId));
+        sendJson(res, 200, await profileStore.getProfile(steamId));
         return;
       }
 
       if (req.method === 'POST' && requestUrl.pathname === profileApiPrefix) {
         const body = await readBody(req);
-        const existing = findProfile(profiles, String(body.steamId || ''));
-        const profile = normalizeProfile(body, existing);
-        const nextProfiles = profiles.filter((item) => item.steamId !== profile.steamId);
-        nextProfiles.push(profile);
-        writeProfiles(nextProfiles);
+        const profile = await profileStore.saveProfile(body);
         sendJson(res, 200, profile);
         return;
       }
@@ -253,7 +143,7 @@ const server = http.createServer(async (req, res) => {
           return;
         }
 
-        writeProfiles(profiles.filter((profile) => profile.steamId !== steamId));
+        await profileStore.deleteProfile(steamId);
         sendJson(res, 200, { ok: true });
         return;
       }
@@ -277,5 +167,5 @@ const server = http.createServer(async (req, res) => {
 
 server.listen(port, () => {
   console.log(`Barelands server listening on http://localhost:${port}`);
-  console.log(`Profiles stored in ${profilesPath}`);
+  console.log(`Profiles stored in Turso`);
 });

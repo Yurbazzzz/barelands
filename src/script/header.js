@@ -237,7 +237,12 @@ function initAuthState() {
 
     if (cabinetLogoutBtn) {
       cabinetLogoutBtn.addEventListener('click', async () => {
-        await saveProfileToServer(getCurrentUser());
+        try {
+          await saveProfileToServer(getCurrentUser());
+        } catch (error) {
+          console.warn('Не удалось сохранить профиль перед выходом:', error.message);
+        }
+
         removeCurrentUser();
         redirectToHome();
       });

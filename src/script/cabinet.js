@@ -181,18 +181,25 @@ if (avatarFallback) avatarFallback.textContent = makeInitials(displayName);
 
   const persistProfile = async (nextUser, successMessage) => {
     const normalizedUser = normalizeServerProfile(nextUser, currentUser.steamId || defaultSteamId);
-    const savedUser = await saveProfileToServer(normalizedUser);
-    const serverUser = normalizeServerProfile(savedUser || {}, normalizedUser.steamId);
 
-    currentUser = normalizeServerProfile({
-      ...serverUser,
-      ...normalizedUser,
-      displayName: normalizedUser.displayName,
-      nickname: normalizedUser.nickname,
-      avatarUrl: normalizedUser.avatarUrl,
-      customDisplayName: normalizedUser.customDisplayName,
-      customAvatarUrl: normalizedUser.customAvatarUrl
-    }, normalizedUser.steamId);
+    try {
+      const savedUser = await saveProfileToServer(normalizedUser);
+      const serverUser = normalizeServerProfile(savedUser || {}, normalizedUser.steamId);
+
+      currentUser = normalizeServerProfile({
+        ...serverUser,
+        ...normalizedUser,
+        displayName: normalizedUser.displayName,
+        nickname: normalizedUser.nickname,
+        avatarUrl: normalizedUser.avatarUrl,
+        customDisplayName: normalizedUser.customDisplayName,
+        customAvatarUrl: normalizedUser.customAvatarUrl
+      }, normalizedUser.steamId);
+    } catch (error) {
+      console.error('Не удалось сохранить профиль:', error);
+      showMessage('Не удалось сохранить профиль. Попробуйте позже.', 'error');
+      return;
+    }
 
     renderProfile(currentUser);
     saveCurrentUser(currentUser);
@@ -259,7 +266,12 @@ if (avatarFallback) avatarFallback.textContent = makeInitials(displayName);
   };
 
   const handleLogout = async () => {
-    await saveProfileToServer(currentUser);
+    try {
+      await saveProfileToServer(currentUser);
+    } catch (error) {
+      console.warn('Не удалось сохранить профиль перед выходом:', error.message);
+    }
+
     removeCurrentUser();
     window.location.href = '../index.html';
   };
