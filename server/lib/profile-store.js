@@ -1,4 +1,20 @@
-const { createClient } = require('@libsql/client');
+const { createClient } = require('@supabase/supabase-js');
+
+const supabaseUrl = process.env.SUPABASE_URL || process.env.BARELANDS_SUPABASE_URL || '';
+const supabaseKey = process.env.SUPABASE_ANON_KEY || process.env.BARELANDS_SUPABASE_KEY || '';
+
+function createConfigError() {
+  const error = new Error('Supabase profile storage is not configured');
+  error.statusCode = 503;
+  return error;
+}
+
+function getClient() {
+  if (!supabaseUrl || !supabaseKey) {
+    throw createConfigError();
+  }
+  return createClient(supabaseUrl, supabaseKey);
+}
 
 const allowedPrivileges = new Set(['Обычный', 'Модератор', 'Администратор']);
 const maxDisplayNameLength = 64;
@@ -6,42 +22,6 @@ const maxNicknameLength = 64;
 const maxEmailLength = 254;
 const maxSocialLength = 64;
 const maxAvatarUrlLength = 5 * 1024 * 1024;
-
-function getDatabaseUrl() {
-  return process.env.TURSO_DATABASE_URL || process.env.BARELANDS_TURSO_DATABASE_URL || '';
-}
-
-function getAuthToken() {
-  return process.env.TURSO_AUTH_TOKEN || process.env.BARELANDS_TURSO_AUTH_TOKEN || '';
-}
-
-let client = null;
-let schemaReady = false;
-
-function createConfigError() {
-  const error = new Error('Turso profile storage is not configured');
-  error.statusCode = 503;
-  return error;
-}
-
-function getClient() {
-  const databaseUrl = getDatabaseUrl();
-  const authToken = getAuthToken();
-
-  if (!databaseUrl || !authToken) {
-    throw createConfigError();
-  }
-
-  if (!client) {
-    client = createClient({
-      url: databaseUrl,
-      authToken,
-      intMode: 'string'
-    });
-  }
-
-  return client;
-}
 
 function toBoolean(value) {
   return value === true || value === 1 || value === '1' || value === 'true';
@@ -106,53 +86,46 @@ function normalizeStoredProfile(profile, fallbackSteamId = '') {
   };
 }
 
-function rowToProfile(row) {
+function supabaseToProfile(row) {
   return normalizeStoredProfile({
-    steamId: row?.steamId,
+    steamId: row?.steam_id,
     email: row?.email,
-    displayName: row?.displayName,
+    displayName: row?.display_name,
     nickname: row?.nickname,
-    avatarUrl: row?.avatarUrl,
-    customDisplayName: toBoolean(row?.customDisplayName),
-    customAvatarUrl: toBoolean(row?.customAvatarUrl),
+    avatarUrl: row?.avatar_url,
+    customDisplayName: toBoolean(row?.custom_display_name),
+    customAvatarUrl: toBoolean(row?.custom_avatar_url),
     balance: toNumber(row?.balance, 0),
     privilege: row?.privilege,
     telegram: typeof row?.telegram === 'string' ? row.telegram : null,
     discord: typeof row?.discord === 'string' ? row.discord : null,
     twitch: typeof row?.twitch === 'string' ? row.twitch : null,
     email_verified_at: typeof row?.email_verified_at === 'string' ? row.email_verified_at : null,
-    isOnline: toBoolean(row?.isOnline),
-    createdAt: row?.createdAt,
-    updatedAt: row?.updatedAt
+    isOnline: toBoolean(row?.is_online),
+    createdAt: row?.created_at,
+    updatedAt: row?.updated_at
   });
 }
 
-async function ensureSchema() {
-  if (schemaReady) return;
-
-  const db = getClient();
-  await db.execute(`
-    CREATE TABLE IF NOT EXISTS profiles (
-      steamId TEXT PRIMARY KEY,
-      email TEXT NOT NULL DEFAULT '',
-      displayName TEXT NOT NULL DEFAULT '',
-      nickname TEXT NOT NULL DEFAULT '',
-      avatarUrl TEXT NOT NULL DEFAULT '',
-      customDisplayName INTEGER NOT NULL DEFAULT 0,
-      customAvatarUrl INTEGER NOT NULL DEFAULT 0,
-      balance REAL NOT NULL DEFAULT 0,
-      privilege TEXT NOT NULL DEFAULT 'Обычный',
-      telegram TEXT,
-      discord TEXT,
-      twitch TEXT,
-      email_verified_at TEXT,
-      isOnline INTEGER NOT NULL DEFAULT 0,
-      createdAt TEXT NOT NULL,
-      updatedAt TEXT NOT NULL
-    )
-  `);
-
-  schemaReady = true;
+function profileToSupabase(profile) {
+  return {
+    steam_id: profile.steamId,
+    email: profile.email,
+    display_name: profile.displayName,
+    nickname: profile.nickname,
+    avatar_url: profile.avatarUrl,
+    custom_display_name: profile.customDisplayName ? 1 : 0,
+    custom_avatar_url: profile.customAvatarUrl ? 1 : 0,
+    balance: profile.balance,
+    privilege: profile.privilege,
+    telegram: profile.telegram,
+    discord: profile.discord,
+    twitch: profile.twitch,
+    email_verified_at: profile.email_verified_at,
+    is_online: profile.isOnline ? 1 : 0,
+    created_at: profile.createdAt,
+    updated_at: profile.updatedAt
+  };
 }
 
 function normalizeProfileInput(body, existing = null) {
@@ -230,78 +203,42 @@ function normalizeProfileInput(body, existing = null) {
 }
 
 async function getProfileFromDb(steamId) {
-  await ensureSchema();
-  const db = getClient();
-  const result = await db.execute({
-    sql: 'SELECT * FROM profiles WHERE steamId = ?',
-    args: [steamId]
-  });
+  const supabase = getClient();
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('steam_id', String(steamId))
+    .single();
 
-  return rowToProfile(result.rows?.[0] || null);
+  if (error && error.code !== 'PGRST116') {
+    throw error;
+  }
+
+  return supabaseToProfile(data || null);
 }
 
 async function saveProfileToDb(input) {
-  await ensureSchema();
-
   const existing = await getProfileFromDb(String(input.steamId));
   const profile = normalizeProfileInput(input, existing);
-  const db = getClient();
 
-  await db.execute({
-    sql: `
-      INSERT INTO profiles (
-        steamId, email, displayName, nickname, avatarUrl, customDisplayName, customAvatarUrl,
-        balance, privilege, telegram, discord, twitch, email_verified_at, isOnline, createdAt, updatedAt
-      ) VALUES (
-        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
-      )
-      ON CONFLICT(steamId) DO UPDATE SET
-        email = excluded.email,
-        displayName = excluded.displayName,
-        nickname = excluded.nickname,
-        avatarUrl = excluded.avatarUrl,
-        customDisplayName = excluded.customDisplayName,
-        customAvatarUrl = excluded.customAvatarUrl,
-        balance = excluded.balance,
-        privilege = excluded.privilege,
-        telegram = excluded.telegram,
-        discord = excluded.discord,
-        twitch = excluded.twitch,
-        email_verified_at = excluded.email_verified_at,
-        isOnline = excluded.isOnline,
-        createdAt = excluded.createdAt,
-        updatedAt = excluded.updatedAt
-    `,
-    args: [
-      profile.steamId,
-      profile.email,
-      profile.displayName,
-      profile.nickname,
-      profile.avatarUrl,
-      profile.customDisplayName ? 1 : 0,
-      profile.customAvatarUrl ? 1 : 0,
-      profile.balance,
-      profile.privilege,
-      profile.telegram,
-      profile.discord,
-      profile.twitch,
-      profile.email_verified_at,
-      profile.isOnline ? 1 : 0,
-      profile.createdAt,
-      profile.updatedAt
-    ]
-  });
+  const supabase = getClient();
+  const { error } = await supabase
+    .from('profiles')
+    .upsert(profileToSupabase(profile));
+
+  if (error) throw error;
 
   return profile;
 }
 
 async function deleteProfileFromDb(steamId) {
-  await ensureSchema();
-  const db = getClient();
-  await db.execute({
-    sql: 'DELETE FROM profiles WHERE steamId = ?',
-    args: [steamId]
-  });
+  const supabase = getClient();
+  const { error } = await supabase
+    .from('profiles')
+    .delete()
+    .eq('steam_id', String(steamId));
+
+  if (error) throw error;
 }
 
 module.exports = {

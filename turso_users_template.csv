@@ -1,0 +1,2 @@
+id,email,displayName,nickname,avatarUrl,customDisplayName,customAvatarUrl,balance,privilege,telegram,discord,twitch,email_verified_at,isOnline,createdAt,updatedAt
+1,test@example.com,TestUser,test,,,,0,user,,,,,0,2026-06-20 00:00:00,2026-06-20 00:00:00

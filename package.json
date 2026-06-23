@@ -30,7 +30,17 @@
     "webpack-dev-server": "^4.15.1"
   },
   "dependencies": {
-    "@libsql/client": "^0.17.4",
-    "@netlify/blobs": "^10.7.9"
-  }
+    "@supabase/supabase-js": "^2.108.2",
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
+    "mongodb": "^7.3.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Yurbazzzz/barelands.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Yurbazzzz/barelands/issues"
+  },
+  "homepage": "https://github.com/Yurbazzzz/barelands#readme"
 }

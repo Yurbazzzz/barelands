@@ -167,5 +167,5 @@ const server = http.createServer(async (req, res) => {
 
 server.listen(port, () => {
   console.log(`Barelands server listening on http://localhost:${port}`);
-  console.log(`Profiles stored in Turso`);
+  console.log(`Profiles stored in Supabase`);
 });
