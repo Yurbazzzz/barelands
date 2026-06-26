@@ -9,12 +9,12 @@ import {
 } from './storage.js';
 
 document.addEventListener('DOMContentLoaded', () => {
-  const burger = document.querySelector('.header__burger');
-  const header = document.querySelector('.header');
-  const nav = document.querySelector('.header__nav');
-  const closeButton = document.querySelector('.header__nav-close');
-  const loginBtn = document.querySelector('.login-btn');
-  const cabinetLogoutBtn = document.querySelector('.cabinet__logout-button');
+   const burger = document.querySelector('.header__burger');
+   const header = document.querySelector('.header');
+   const nav = document.querySelector('.header__nav');
+   const closeButton = document.querySelector('.header__nav-close');
+   const loginBtn = document.querySelector('.login-btn');
+    const cabinetLogoutBtn = document.querySelector('.cabinet__logout-button');
 
   const currentPath = window.location.pathname;
   const isCabinetPage = currentPath.endsWith('/cabinet.html') || currentPath.endsWith('\\cabinet.html');
@@ -252,9 +252,9 @@ function initAuthState() {
     setupAuthModalEvents();
   }
 
-  function setupLoginButton() {
+function setupLoginButton() {
     if (!loginBtn) return;
-    loginBtn.addEventListener('click', () => {
+    const handleLoginClick = () => {
       if (isLoggedIn()) {
         redirectToCabinet();
         return;
@@ -262,18 +262,42 @@ function initAuthState() {
       createAuthModal();
       setupAuthModalEvents();
       setModalState(true);
+    };
+    loginBtn.addEventListener('click', handleLoginClick);
+  }
+
+  function moveLoginButtonToNav() {
+    if (!loginBtn || !nav) return;
+    const loginBtnClone = loginBtn.cloneNode(true);
+    loginBtnClone.classList.add('login-btn--mobile');
+    nav.insertBefore(loginBtnClone, nav.firstChild);
+    loginBtnClone.addEventListener('click', () => {
+      if (isLoggedIn()) {
+        redirectToCabinet();
+      } else {
+        createAuthModal();
+        setupAuthModalEvents();
+        setModalState(true);
+      }
     });
   }
 
-  function closeNav() {
-    header.classList.remove('header--nav-open');
-    burger.setAttribute('aria-expanded', 'false');
+  function removeLoginButtonFromNav() {
+    const loginBtnInNav = nav?.querySelector('.login-btn--mobile');
+    loginBtnInNav?.remove();
   }
 
-  function openNav() {
-    header.classList.add('header--nav-open');
-    burger.setAttribute('aria-expanded', 'true');
-  }
+function closeNav() {
+     header.classList.remove('header--nav-open');
+     burger.setAttribute('aria-expanded', 'false');
+     removeLoginButtonFromNav();
+   }
+
+   function openNav() {
+     header.classList.add('header--nav-open');
+     burger.setAttribute('aria-expanded', 'true');
+     moveLoginButtonToNav();
+   }
 
   if (!burger || !header || !nav) return;
 
