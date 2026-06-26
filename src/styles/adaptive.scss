@@ -30,6 +30,14 @@
     .header__nav-link {
         font-size: 16px;
     }
+    .news {
+        &-card__title{
+            font-size: 25px;
+        }
+        &-card__description {
+            font-size: 15px;
+        }
+    }
 }
 
 @media (max-width: 900px) {
